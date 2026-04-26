@@ -1,0 +1,50 @@
+# ============================================================
+# Backend (Maven / Spring Boot)
+# ============================================================
+backend/target/
+backend/.mvn/repository/
+backend/**/*.class
+backend/**/*.jar
+backend/**/*.war
+*.iml
+.idea/
+*.iws
+*.ipr
+
+# ============================================================
+# Mobile (Flutter / Dart)
+# ============================================================
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/android/
+mobile/ios/
+mobile/macos/
+mobile/windows/
+mobile/linux/
+mobile/.metadata
+mobile/coverage/
+mobile/**/*.g.dart
+mobile/**/*.freezed.dart
+
+# ============================================================
+# OS / IDE
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+.vscode/settings.json
+.vscode/*.code-workspace
+
+# ============================================================
+# Secrets / environment
+# ============================================================
+*.env
+.env.*
+application-local.yml
+application-secret.yml
+secrets/

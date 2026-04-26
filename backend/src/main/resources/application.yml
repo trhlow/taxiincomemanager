@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: taxi-income-backend
+  profiles:
+    active: dev
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8081
+  error:
+    include-message: always
