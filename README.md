@@ -80,6 +80,7 @@ flutter run
 ```
 
 Cấu hình base URL backend (có thể chỉnh ở màn hình onboarding):
+
 - Android emulator: `http://10.0.2.2:8081`
 - iOS simulator / desktop: `http://localhost:8081`
 
@@ -87,19 +88,21 @@ App sẽ hỏi nhập tên ở lần mở đầu tiên, sau đó lưu `userId` v
 
 ## API tóm tắt
 
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| POST | `/api/users/init` | Tạo user lần đầu (idempotent) |
-| GET | `/api/users/me` | Lấy thông tin user hiện tại |
-| POST | `/api/orders` | Nhập đơn mới (auto-tính cước/thực nhận) |
-| GET | `/api/orders/by-date?date=YYYY-MM-DD` | Đơn theo ngày |
-| GET | `/api/orders/monthly?year=2026&month=4` | Đơn theo tháng |
-| GET | `/api/orders/period/current` | Đơn của chu kỳ 10 ngày hiện tại |
-| GET | `/api/dashboard` | Tổng hợp ngày/chu kỳ/tháng/bo/cước/ngày làm việc |
-| POST | `/api/schedules` | Đăng ký 1 ca (sáng/tối) cho 1 ngày |
-| DELETE | `/api/schedules?workDate=YYYY-MM-DD&shiftType=MORNING` | Bỏ đăng ký ca |
-| GET | `/api/schedules/week?weekStart=YYYY-MM-DD` | Lịch tuần |
-| GET | `/api/schedules/week/check?weekStart=YYYY-MM-DD` | Kiểm tra đủ 1 sáng + 2 tối |
+
+| Method | Endpoint                                               | Mô tả                                            |
+| ------ | ------------------------------------------------------ | ------------------------------------------------ |
+| POST   | `/api/users/init`                                      | Tạo user lần đầu (idempotent)                    |
+| GET    | `/api/users/me`                                        | Lấy thông tin user hiện tại                      |
+| POST   | `/api/orders`                                          | Nhập đơn mới (auto-tính cước/thực nhận)          |
+| GET    | `/api/orders/by-date?date=YYYY-MM-DD`                  | Đơn theo ngày                                    |
+| GET    | `/api/orders/monthly?year=2026&month=4`                | Đơn theo tháng                                   |
+| GET    | `/api/orders/period/current`                           | Đơn của chu kỳ 10 ngày hiện tại                  |
+| GET    | `/api/dashboard`                                       | Tổng hợp ngày/chu kỳ/tháng/bo/cước/ngày làm việc |
+| POST   | `/api/schedules`                                       | Đăng ký 1 ca (sáng/tối) cho 1 ngày               |
+| DELETE | `/api/schedules?workDate=YYYY-MM-DD&shiftType=MORNING` | Bỏ đăng ký ca                                    |
+| GET    | `/api/schedules/week?weekStart=YYYY-MM-DD`             | Lịch tuần                                        |
+| GET    | `/api/schedules/week/check?weekStart=YYYY-MM-DD`       | Kiểm tra đủ 1 sáng + 2 tối                       |
+
 
 Mọi request (trừ `POST /api/users/init`) cần header `X-User-Id`.
 
@@ -110,3 +113,4 @@ docker compose down
 # hoặc xoá luôn data:
 docker compose down -v
 ```
+

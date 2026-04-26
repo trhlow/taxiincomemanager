@@ -41,6 +41,10 @@ desktop.ini
 .vscode/*.code-workspace
 
 # ============================================================
+# Logs
+*.log
+backend/backend.log
+
 # Secrets / environment
 # ============================================================
 *.env
