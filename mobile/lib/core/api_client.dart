@@ -27,15 +27,30 @@ class ApiClient {
     return 'http://localhost:8081';
   }
 
-  /// In **release** builds a key must be supplied via `--dart-define=TAXI_API_KEY=...`.
-  /// Debug/profile keeps a dev default so local `flutter run` works without defines.
+  /// Resolves API key from build-time defines (no runtime env on mobile).
+  ///
+  /// - Pass `--dart-define=TAXI_API_KEY=...` (matches server `APP_API_KEY`).
+  /// - For local dev without a key file, use `--dart-define=DEV_MODE=true` to
+  ///   allow the shared dev key, or rely on **debug** builds (see below).
+  /// - **Release** always requires `TAXI_API_KEY` (never implicit dev key).
+  /// - **Profile** requires `TAXI_API_KEY` or `DEV_MODE=true`.
+  /// - **Debug** (e.g. `flutter test`, `flutter run`): falls back to dev key so
+  ///   CI and local workflows work without repeating defines.
   static String defaultApiKey() {
     const fromEnv = String.fromEnvironment('TAXI_API_KEY');
+    const devMode = bool.fromEnvironment('DEV_MODE', defaultValue: false);
     if (fromEnv.isNotEmpty) return fromEnv;
     if (kReleaseMode) {
       throw StateError(
         'Missing TAXI_API_KEY. Release builds must pass '
-        '--dart-define=TAXI_API_KEY=<server key> (do not ship a default secret).',
+        '--dart-define=TAXI_API_KEY=<server key>.',
+      );
+    }
+    if (devMode) return 'dev-local-api-key';
+    if (kProfileMode) {
+      throw StateError(
+        'Missing TAXI_API_KEY. Profile builds must pass '
+        '--dart-define=TAXI_API_KEY=... or --dart-define=DEV_MODE=true for local dev.',
       );
     }
     return 'dev-local-api-key';
