@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/format.dart';
+import '../../core/order_money_calc.dart';
 import '../../core/theme.dart';
 import '../../widgets/info_banner.dart';
 import '../../widgets/money_input.dart';
@@ -26,8 +27,6 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
   int _taxiCount = 1;
   bool _saving = false;
 
-  static const double _feeRate = 0.30;
-
   @override
   void dispose() {
     _amountCtrl.dispose();
@@ -36,9 +35,10 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
     super.dispose();
   }
 
-  int get _fee => (_amount * _feeRate).round();
-  int get _subtotal => _amount - _fee + _tip;
-  int get _net => _taxiCount == 2 ? ((_subtotal + 1) ~/ 2) : _subtotal;
+  int get _fee =>
+      OrderMoneyCalc.multiplyRate(_amount, OrderMoneyCalc.defaultFeeRateMillis);
+  int get _subtotal => OrderMoneyCalc.subtotal(_amount, _fee, _tip);
+  int get _net => OrderMoneyCalc.netAmount(_subtotal, _taxiCount);
 
   Future<void> _save() async {
     if (_amount <= 0) {
