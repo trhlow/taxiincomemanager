@@ -1,0 +1,14 @@
+# Used when spring.profiles.active=test (see SecurityFilterIntegrationTest).
+# Datasource URL comes from Testcontainers @DynamicPropertySource.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: true
+
+app:
+  api-key: test-integration-api-key
+  cors:
+    allowed-origins: http://localhost:8080
