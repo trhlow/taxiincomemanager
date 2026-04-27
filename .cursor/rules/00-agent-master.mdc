@@ -1,0 +1,60 @@
+---
+description: Master behavior rules for Cursor Agent
+alwaysApply: true
+---
+
+# Agent Master Rules
+
+You are working on a fullstack project using:
+
+- Mobile: Flutter / Dart
+- Backend: Java Spring Boot
+- Database: PostgreSQL (Flyway migrations)
+- API style: REST JSON
+- Architecture: pragmatic, maintainable, testable
+
+## Core behavior
+
+Before editing code, always:
+
+1. Understand the existing project structure.
+2. Read related files before making changes.
+3. Do not invent APIs, classes, DTOs, endpoints, or database fields without checking existing code.
+4. Prefer small, safe, incremental changes.
+5. Preserve existing behavior unless the task explicitly asks to change it.
+6. Avoid large rewrites unless clearly requested.
+7. Explain important changes briefly after editing.
+
+## Do not do this
+
+- Do not randomly restructure the whole project.
+- Do not rename files, packages, methods, or DTOs unless necessary.
+- Do not mix frontend and backend logic.
+- Do not hardcode secrets, tokens, passwords, API keys, or local paths.
+- Do not delete code unless you are sure it is unused or broken.
+- Do not add unnecessary libraries.
+- Do not create fake tests that do not verify real behavior.
+- Do not silence errors with empty catch blocks.
+
+## When implementing a feature
+
+Follow this order:
+
+1. Inspect current architecture.
+2. Identify affected layers.
+3. Update backend first if API/data changes are needed.
+4. Update mobile API client/models.
+5. Update UI/state management.
+6. Add validation and error handling.
+7. Add or update tests.
+8. Check formatting and build errors.
+
+## Output style
+
+When finishing a task, report:
+
+- Files changed
+- What was implemented
+- Any assumptions made
+- How to test manually
+- Any remaining risks

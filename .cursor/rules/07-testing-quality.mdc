@@ -1,0 +1,41 @@
+---
+description: Testing and code quality rules (this repo)
+alwaysApply: true
+---
+
+# Testing and Quality Rules
+
+## Backend tests
+
+Use the right level of test for the change:
+
+- Unit tests for pure business logic (calculations, date cycle rules)
+- Slice tests when wiring matters (`@WebMvcTest`, `@DataJpaTest`) — add when justified
+- Integration tests for critical flows — prefer when touching migrations/Flyway + JPA behavior end-to-end
+
+### Commands (this repo)
+
+This repo currently uses Maven directly (no `mvnw` checked in):
+
+- `mvn test` (from `backend/`)
+
+## Mobile tests / analysis
+
+- `flutter analyze`
+- `flutter test`
+
+Add widget/unit tests when:
+
+- Parsing/formatting logic changes
+- Navigation/auth gating changes
+- API client header behavior changes
+
+## Definition of done
+
+A change is “done” when:
+
+- It compiles
+- Targeted flows work manually
+- Reasonable tests exist/updated for risky logic
+- No obvious secret leakage introduced
+- API contract remains consistent (or explicitly versioned/migrated)

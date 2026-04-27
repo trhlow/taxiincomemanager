@@ -1,0 +1,56 @@
+---
+description: Domain rules for taxi income manager (this repo)
+alwaysApply: true
+---
+
+# Taxi Income Domain Rules
+
+This app manages personal taxi orders and income summaries.
+
+## Money + fee model (baseline)
+
+For each order:
+
+- `feeAmount = roundHalfUp(orderAmount * feeRate)`
+- Default `feeRate` is **0.30** unless explicitly overridden per order
+- `subtotal = orderAmount - feeAmount + tipAmount`
+- `netAmount`:
+  - `taxiCount = 1` → `netAmount = subtotal`
+  - `taxiCount = 2` → split `subtotal` evenly using the project’s rounding policy (half-up)
+
+Important:
+
+- Backend calculations are the **source of truth**.
+- Mobile may preview calculations, but must not silently diverge from backend rules.
+
+## Taxi count rules
+
+` taxiCount` must be **1** or **2**.
+
+## Income cycles (10-day months)
+
+Cycles are within the same calendar month:
+
+- Cycle 1: day **01 → 10**
+- Cycle 2: day **11 → 20**
+- Cycle 3: day **21 → last day of month** (28/29/30/31 depending on month)
+
+Do not reintroduce “cross-month cycle” logic unless explicitly requested and migrated end-to-end.
+
+## Dates
+
+- Store and transmit dates as ISO `yyyy-MM-dd` where applicable.
+- Prefer date pickers over free-text date entry in mobile UX.
+
+## UX formatting
+
+- Display VND with thousands separators (locale `vi_VN`) and a clear `đ` suffix in UI.
+
+## Validation
+
+Reject invalid domain states:
+
+- Negative money inputs
+- Invalid `taxiCount`
+- Invalid `feeRate` outside **[0, 1]**
+- Unrealistic magnitudes beyond agreed caps (if present in backend validation)

@@ -1,0 +1,53 @@
+---
+description: Fullstack project architecture rules (this repo)
+alwaysApply: true
+---
+
+# Project Architecture Rules
+
+This repository layout:
+
+```txt
+project-root/
+├── backend/     # Java Spring Boot
+├── mobile/      # Flutter Dart
+└── README.md
+```
+
+## Backend architecture (current)
+
+Backend uses package-by-feature under `com.taxiincome`:
+
+- `common/` — cross-cutting concerns (filters, config, utilities, exception handling)
+- `user/`, `order/`, `dashboard/`, `schedule/` — domain modules
+
+Rules:
+
+- Controllers should stay thin: mapping + validation + delegating to services.
+- Services own business rules and orchestration.
+- Repositories own persistence queries.
+- Entities map DB tables.
+- DTO records are used for API input/output.
+
+Do not force a different folder taxonomy (like `controller/service/impl`) unless explicitly requested.
+
+## Mobile architecture (current)
+
+Flutter app uses:
+
+- `mobile/lib/core/` — theme, networking, storage, providers
+- `mobile/lib/features/<feature>/` — screens + repositories + models
+- `mobile/lib/widgets/` — reusable UI widgets
+
+Rules:
+
+- Prefer feature folders matching backend domains when possible.
+- UI should not embed HTTP details; keep HTTP in repositories / `ApiClient`.
+- Keep widgets small; avoid huge `build()` methods.
+
+## Shared rules
+
+- Backend and mobile must agree on API contract.
+- Never change response JSON shape without updating mobile parsing.
+- Never change mobile model fields without checking backend DTOs.
+- Prefer consistent naming between backend DTO fields and mobile `fromJson` keys.

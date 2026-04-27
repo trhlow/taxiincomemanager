@@ -1,0 +1,41 @@
+---
+description: Database and JPA rules (this repo)
+globs: backend/**/*.java
+alwaysApply: false
+---
+
+# Database and JPA Rules
+
+## Migrations
+
+- Schema changes must go through **Flyway** (`backend/src/main/resources/db/migration/`).
+- Do not rely on Hibernate `ddl-auto` to “fix” production schema drift.
+
+## Entities
+
+- Entities map tables; keep persistence concerns out of controllers.
+- Prefer LAZY relationships where applicable; avoid accidental N+1 loads.
+
+## IDs and money (this repo)
+
+This project currently uses:
+
+- UUID primary keys for several tables
+- `BIGINT` for VND amounts at persistence layer
+
+Rules:
+
+- Do not change money storage type casually (`BIGINT` ↔ `BigDecimal`) without an explicit migration + coordinated API changes.
+- If adding constraints, do it in SQL migration with clear intent (CHECK, UNIQUE, indexes).
+
+## Indexing / performance
+
+When adding new query patterns:
+
+- Add indexes that match real filters (`user_id`, date columns, common sorts).
+- Avoid loading large lists without pagination unless the product requirement is explicitly “small personal dataset”.
+
+## Query safety
+
+- Prefer explicit queries when derived query names become unclear.
+- Watch for pagination needs as history grows.

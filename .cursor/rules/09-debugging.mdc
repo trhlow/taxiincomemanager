@@ -1,0 +1,46 @@
+---
+description: Debugging workflow for Cursor Agent (this repo)
+alwaysApply: true
+---
+
+# Debugging Rules
+
+When debugging, follow this process:
+
+1. Read the exact error message (client + server).
+2. Identify failing file/endpoint and the smallest repro.
+3. Check recent changes (`git diff`, recent commits).
+4. Fix root cause, not symptoms.
+5. Add/adjust tests if the bug is logic-heavy.
+
+## Backend (Spring Boot)
+
+Checklist:
+
+- Request mapping + HTTP method
+- DTO validation (`@Valid`, Bean Validation messages)
+- Service rules + transactions
+- Repository query + DB schema (Flyway)
+- Filters (order matters): API key / user context / CORS
+- `application.yml` + profile config + env imports
+
+Common local pitfalls:
+
+- Wrong DB port/credentials
+- Missing `X-Api-Key` / wrong key
+- Missing/invalid `X-User-Id`
+
+## Mobile (Flutter)
+
+Checklist:
+
+- Console stack trace + `DioException` response body
+- Base URL (`ApiClient.defaultBaseUrl()` vs saved base URL)
+- Emulator networking (`10.0.2.2` vs `localhost` on Android)
+- JSON key mismatch vs backend DTO
+- Riverpod provider invalidation after mutations
+
+## Do not
+
+- Hide errors to “make it compile”
+- Disable security checks casually (only as a deliberate local experiment, then revert)

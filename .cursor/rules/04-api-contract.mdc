@@ -1,0 +1,52 @@
+---
+description: REST API contract rules between Flutter and Spring Boot (this repo)
+alwaysApply: true
+---
+
+# API Contract Rules
+
+## Current baseline (do not silently drift)
+
+This repo uses:
+
+- Base path: `/api/...` (no `/v1` prefix today)
+- JSON requests/responses
+- Dates as ISO strings where applicable (`yyyy-MM-dd`, `HH:mm:ss` / ISO-8601)
+- Money fields as **integer VND** (`long` / JSON number) in several endpoints
+
+## Authentication / client identity (current)
+
+Backend expects (for `/api/**`):
+
+- `X-Api-Key`: shared API key (dev/prod configured via env)
+- `X-User-Id`: UUID string for the current user (after onboarding)
+
+Mobile must send both consistently (see `mobile/lib/core/api_client.dart`).
+
+## Error shape (current)
+
+Errors are generally returned as:
+
+```json
+{ "code": "SOME_CODE", "message": "Human readable message" }
+```
+
+Do not introduce a different error envelope (e.g. `{success:false,...}`) unless explicitly migrating the whole API + mobile client.
+
+## Contract change policy
+
+If a DTO field changes:
+
+1. Update backend DTO + validation + service behavior
+2. Update mobile models + repositories + UI
+3. Update README examples + tests
+4. Call out any breaking change explicitly
+
+## Naming consistency
+
+Keep JSON field names aligned between:
+
+- Backend DTO / record JSON property names
+- Mobile `fromJson` keys
+
+Avoid “helpful” renames on one side only.

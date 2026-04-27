@@ -1,0 +1,47 @@
+---
+description: Flutter and Dart coding rules (this repo)
+globs: mobile/**/*.dart
+alwaysApply: false
+---
+
+# Flutter / Dart Rules
+
+## Code style
+
+- Prefer `final` when not reassigned.
+- Prefer small widgets; extract when `build()` grows.
+- Use `const` where possible.
+- Keep file names `snake_case.dart`.
+
+## Architecture (this repo)
+
+- State: **Riverpod** (`flutter_riverpod`).
+- Navigation: **GoRouter** (`go_router`).
+- Networking: **Dio** via `mobile/lib/core/api_client.dart`.
+
+Rules:
+
+- Do not call `Dio` directly from UI widgets; go through repositories / `ApiClient`.
+- Avoid business rules in `build()`; compute in notifiers/services or pure functions.
+
+## Models / JSON
+
+- Match JSON keys to backend DTO field names.
+- Prefer explicit parsing (`num` → `int`) for money fields.
+- Avoid `dynamic` unless unavoidable; if used, isolate and validate.
+
+## UX
+
+Screens that load remote data should handle:
+
+- Loading
+- Empty
+- Error
+- Pull-to-refresh when it is a list/history view
+
+Use `SafeArea` where needed.
+
+## Async
+
+- Catch errors at boundaries and map to user-visible messages.
+- Never swallow exceptions with empty `catch` blocks.

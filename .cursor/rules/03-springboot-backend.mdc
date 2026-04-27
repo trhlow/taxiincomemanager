@@ -1,0 +1,62 @@
+---
+description: Java Spring Boot backend rules (this repo)
+globs: backend/**/*.java
+alwaysApply: false
+---
+
+# Java Spring Boot Rules
+
+## Baseline
+
+- Java **21**
+- Spring Boot **3.3.x**
+- Web + JPA + Validation + Flyway
+
+## Style
+
+- Prefer **constructor injection** (avoid `@Autowired` field injection).
+- Keep controllers thin; business logic belongs in services.
+- Prefer small methods; avoid “god services”.
+
+## Web layer
+
+Controllers should:
+
+- Accept request DTOs (`record` / class) with Bean Validation (`@Valid`)
+- Return response DTOs / records
+- Use correct HTTP status codes (`201` for create, `204` for delete w/ no body, etc.)
+
+## Service layer
+
+Services should:
+
+- Own business rules and orchestration
+- Use `@Transactional` for writes; `@Transactional(readOnly = true)` for heavy reads when appropriate
+- Throw `ApiException` (domain-specific) rather than leaking random runtime exceptions
+
+## Persistence
+
+Repositories:
+
+- Extend Spring Data JPA repositories
+- Keep queries readable; add explicit `@Query` only when needed
+
+## DTO rules
+
+- Do not expose JPA entities directly from controllers.
+- Keep request/response types stable; coordinate with mobile.
+
+## Validation
+
+Backend validation is mandatory even if mobile validates too.
+
+## Logging
+
+- Use SLF4J
+- Do not log secrets, tokens, passwords, full auth headers, or PII
+
+## API versioning
+
+This repo currently uses `/api/...` without `/v1`.
+
+- Do not introduce `/api/v1/...` unless explicitly requested and coordinated end-to-end.

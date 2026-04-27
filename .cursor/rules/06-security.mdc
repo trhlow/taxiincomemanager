@@ -1,0 +1,59 @@
+---
+description: Security rules for mobile and backend (this repo)
+alwaysApply: true
+---
+
+# Security Rules
+
+## General
+
+Never commit or hardcode:
+
+- Passwords
+- JWT secrets
+- API keys
+- Database credentials
+- OAuth client secrets
+- Access tokens / refresh tokens
+
+Use environment variables and keep secrets out of Git.
+
+This repo uses a root `.env` (ignored) + `.env.example` (committed) for local dev values.
+
+## Backend security
+
+- Validate all input on backend (`@Valid`, Bean Validation, explicit checks where needed).
+- Do not trust mobile-only validation.
+- Prefer centralized error handling (`@RestControllerAdvice`) with stable error codes.
+
+### Current auth model (important)
+
+This MVP uses:
+
+- `X-Api-Key` as a coarse gate
+- `X-User-Id` as a personal identity header
+
+Treat this as **not equivalent** to full user authentication/authorization.
+
+If requirements move toward public deployment, plan for JWT/session + proper user auth.
+
+## Logging
+
+- Do not log secrets, tokens, API keys, passwords, or sensitive PII.
+- Avoid dumping entire request bodies in logs if they can contain secrets.
+
+## CORS
+
+- Avoid wildcard origins in production configurations.
+- Keep allowed origins explicit and minimal.
+
+## Mobile security
+
+- Avoid storing long-lived secrets in `SharedPreferences`.
+- Prefer secure storage for tokens if/when true auth is introduced.
+- Clear sensitive local state on “reset/logout” flows.
+
+## Error responses
+
+- Do not leak stack traces to clients in normal API error responses.
+- Prefer actionable codes + safe messages (`ApiError` style in this repo).

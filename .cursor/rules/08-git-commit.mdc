@@ -1,0 +1,46 @@
+---
+description: Git and commit rules (this repo)
+alwaysApply: true
+---
+
+# Git and Commit Rules
+
+## Author identity (must be correct on GitHub)
+
+Commits in this repository must be authored as:
+
+- `user.name`: `trhlow`
+- `user.email`: `thlong190705@gmail.com`
+
+Before committing, verify:
+
+```powershell
+git config user.name
+git config user.email
+```
+
+If a repo-local override exists, it wins over global config. Prefer keeping repo-local identity correct OR remove local overrides so global identity applies.
+
+## Commit style
+
+Use Conventional Commits where possible:
+
+- `feat: ...`
+- `fix: ...`
+- `refactor: ...`
+- `test: ...`
+- `docs: ...`
+- `chore: ...`
+
+## Commit granularity
+
+- One logical change per commit (avoid mixing unrelated refactors + features + formatting sweeps).
+
+## Before pushing
+
+- Ensure working tree is intentional
+- Prefer `git status` / `git diff` review for risky changes
+
+## History rewriting
+
+Avoid rewriting published history unless necessary. If you must rewrite `master`, coordinate because it requires force-push.

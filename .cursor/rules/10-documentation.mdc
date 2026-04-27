@@ -1,0 +1,38 @@
+---
+description: Documentation rules (this repo)
+alwaysApply: true
+---
+
+# Documentation Rules
+
+## Where docs live (today)
+
+- `README.md` is the primary developer entrypoint.
+- `.env.example` documents required environment variables for local dev.
+
+If you add a `docs/` folder later, keep it short and actionable.
+
+## What to update when behavior changes
+
+When you change runtime behavior, update docs/examples for:
+
+- Ports (Postgres, backend, Flutter web)
+- Required headers (`X-Api-Key`, `X-User-Id`)
+- Setup steps (`docker compose`, `mvn`, `flutter run`)
+- Any breaking API contract changes
+
+## API documentation style
+
+Prefer concrete examples:
+
+- HTTP method + path
+- Required headers
+- Example JSON body
+- Example JSON response
+
+Keep examples copy/pasteable for PowerShell where possible.
+
+## Comments in code
+
+- Comment non-obvious domain rules (taxi income cycles, rounding rules).
+- Avoid noise comments that restate the code.
