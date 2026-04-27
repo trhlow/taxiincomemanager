@@ -48,6 +48,7 @@ class _PersonalScreenState extends ConsumerState<PersonalScreen> {
       final storage = ref.read(localStorageProvider);
       await storage.setBaseUrl(_baseUrlCtrl.text.trim());
       _initialUrl = _baseUrlCtrl.text.trim();
+      ref.invalidate(apiClientProvider);
       if (mounted) {
         setState(() {
           _saving = false;
