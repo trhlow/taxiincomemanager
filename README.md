@@ -40,11 +40,17 @@ Chu kỳ 10 ngày trong tháng:
 
 ### 1. Khởi động database
 
+Tạo file `.env` từ mẫu:
+
+```powershell
+Copy-Item .env.example .env
+```
+
 ```powershell
 docker compose up -d
 ```
 
-Database listen trên `localhost:5433` (host) → container port 5432, db `taxi_income`, user `taxi`, password `taxi_dev_pwd`. (Dùng 5433 thay vì 5432 để tránh đụng với Postgres khác có thể đã cài sẵn trên máy.)
+Database listen trên `localhost:5433` (host) → container port 5432. Tên DB, user, password và API key lấy từ `.env`. (Dùng 5433 thay vì 5432 để tránh đụng với Postgres khác có thể đã cài sẵn trên máy.)
 
 ### 2. Chạy backend
 
@@ -58,17 +64,19 @@ Backend listen trên `http://localhost:8081`. Flyway sẽ tự chạy migration 
 Smoke test nhanh bằng curl:
 
 ```powershell
+$API_KEY = "dev-local-api-key"
+
 # Tạo user lần đầu
-curl -X POST http://localhost:8081/api/users/init -H "Content-Type: application/json" -d "{\"displayName\":\"Long\"}"
+curl -X POST http://localhost:8081/api/users/init -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -d "{\"displayName\":\"Long\"}"
 
 # Lấy userId từ response, gán vào biến (ví dụ $UID)
 $UID = "<paste-userId-here>"
 
 # Nhập đơn
-curl -X POST http://localhost:8081/api/orders -H "Content-Type: application/json" -H "X-User-Id: $UID" -d "{\"orderAmount\":444000,\"tipAmount\":0,\"taxiCount\":2}"
+curl -X POST http://localhost:8081/api/orders -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -H "X-User-Id: $UID" -d "{\"orderAmount\":444000,\"tipAmount\":0,\"taxiCount\":2}"
 
 # Xem dashboard
-curl http://localhost:8081/api/dashboard -H "X-User-Id: $UID"
+curl http://localhost:8081/api/dashboard -H "X-Api-Key: $API_KEY" -H "X-User-Id: $UID"
 ```
 
 ### 3. Chạy mobile app
@@ -79,12 +87,18 @@ flutter pub get
 flutter run
 ```
 
+Nếu đổi `APP_API_KEY` trong `.env`, chạy Flutter với cùng key:
+
+```powershell
+flutter run --dart-define=TAXI_API_KEY="<APP_API_KEY>"
+```
+
 Cấu hình base URL backend (có thể chỉnh ở màn hình onboarding):
 
 - Android emulator: `http://10.0.2.2:8081`
 - iOS simulator / desktop: `http://localhost:8081`
 
-App sẽ hỏi nhập tên ở lần mở đầu tiên, sau đó lưu `userId` vào `SharedPreferences` và gửi qua header `X-User-Id` ở mọi request.
+App sẽ hỏi nhập tên ở lần mở đầu tiên, sau đó lưu `userId` vào `SharedPreferences` và gửi qua header `X-User-Id` ở mọi request. Mọi request API cũng gửi `X-Api-Key`.
 
 ## API tóm tắt
 
@@ -104,7 +118,7 @@ App sẽ hỏi nhập tên ở lần mở đầu tiên, sau đó lưu `userId` v
 | GET    | `/api/schedules/week/check?weekStart=YYYY-MM-DD`       | Kiểm tra đủ 1 sáng + 2 tối                       |
 
 
-Mọi request (trừ `POST /api/users/init`) cần header `X-User-Id`.
+Mọi request cần header `X-Api-Key`. Mọi request sau khi init user cần thêm `X-User-Id`.
 
 ## Stop services
 
