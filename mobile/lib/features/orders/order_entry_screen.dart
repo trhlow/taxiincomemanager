@@ -19,6 +19,10 @@ class OrderEntryScreen extends ConsumerStatefulWidget {
 }
 
 class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
+  /// Mirrors backend [OrderService] caps.
+  static const int _maxOrderAmount = 100000000;
+  static const int _maxTipAmount = 20000000;
+
   final _amountCtrl = TextEditingController();
   final _tipCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
@@ -44,6 +48,18 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
     if (_amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập tiền đơn')),
+      );
+      return;
+    }
+    if (_amount > _maxOrderAmount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tiền đơn tối đa 100.000.000 đ')),
+      );
+      return;
+    }
+    if (_tip > _maxTipAmount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tiền bo tối đa 20.000.000 đ')),
       );
       return;
     }

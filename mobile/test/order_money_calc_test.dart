@@ -22,6 +22,15 @@ void main() {
   });
 
   group('preview chain', () {
+    test('net splits and rounds up for two drivers (101 đơn)', () {
+      const amount = 101;
+      final fee = OrderMoneyCalc.multiplyRate(amount, 300);
+      expect(fee, 30);
+      final subtotal = OrderMoneyCalc.subtotal(amount, fee, 0);
+      expect(subtotal, 71);
+      expect(OrderMoneyCalc.netAmount(subtotal, 2), 36);
+    });
+
     test('sample order matches manual formula', () {
       const amount = 160000;
       const tip = 10000;
