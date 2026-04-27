@@ -66,7 +66,34 @@ class ScheduleScreen extends ConsumerWidget {
             checkAsync.when(
               data: (c) => _CheckCard(check: c),
               loading: () => const SizedBox(height: 80),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (e, _) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Material(
+                  color: AppColors.accentOrange.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            color: AppColors.accentOrange, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Không tải được kiểm tra lịch: $e',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textPrimary,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 14),
             scheduleAsync.when(
