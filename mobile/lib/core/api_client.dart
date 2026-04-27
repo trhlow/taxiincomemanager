@@ -27,6 +27,13 @@ class ApiClient {
     return 'http://localhost:8081';
   }
 
+  static String defaultApiKey() {
+    return const String.fromEnvironment(
+      'TAXI_API_KEY',
+      defaultValue: 'dev-local-api-key',
+    );
+  }
+
   static ApiClient create(LocalStorage storage) {
     final base = storage.baseUrl ?? defaultBaseUrl();
     final dio = Dio(BaseOptions(
@@ -39,6 +46,7 @@ class ApiClient {
     ));
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
+        options.headers['X-Api-Key'] = defaultApiKey();
         final uid = storage.userId;
         if (uid != null && uid.isNotEmpty) {
           options.headers['X-User-Id'] = uid;
