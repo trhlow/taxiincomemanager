@@ -25,11 +25,15 @@ public class UserService {
      */
     @Transactional
     public User initOrGetUser(InitUserRequest req) {
+        String displayName = req.displayName() == null ? "" : req.displayName().trim();
+        if (displayName.isBlank()) {
+            throw ApiException.badRequest("INVALID_DISPLAY_NAME", "Tên không được để trống");
+        }
         return userRepository.findFirstByOrderByCreatedAtAsc()
                 .orElseGet(() -> {
                     User u = new User();
                     u.setId(UUID.randomUUID());
-                    u.setDisplayName(req.displayName().trim());
+                    u.setDisplayName(displayName);
                     u.setNameLocked(true);
                     return userRepository.save(u);
                 });

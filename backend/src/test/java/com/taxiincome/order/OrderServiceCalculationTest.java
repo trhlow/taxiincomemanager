@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Test cases lấy thẳng từ file HoangLongGap.xlsx (sheet NhapDon) để chốt công thức.
@@ -43,5 +44,31 @@ class OrderServiceCalculationTest {
         assertThat(c.feeAmount()).isEqualTo(60_000L);
         assertThat(c.subtotal()).isEqualTo(160_000L);
         assertThat(c.netAmount()).isEqualTo(160_000L);
+    }
+
+    @Test
+    void splitHalf_roundsOddSubtotalUp() {
+        OrderService.Calculation c = OrderService.calculate(101L, 0L, (short) 2, BigDecimal.ZERO);
+        assertThat(c.netAmount()).isEqualTo(51L);
+    }
+
+    @Test
+    void rejectsInvalidTaxiCount() {
+        assertThatThrownBy(() -> OrderService.calculate(100_000L, 0L, (short) 3, RATE))
+                .hasMessage("Số tài chỉ được 1 hoặc 2");
+    }
+
+    @Test
+    void rejectsInvalidFeeRate() {
+        assertThatThrownBy(() -> OrderService.calculate(100_000L, 0L, (short) 1, new BigDecimal("1.1")))
+                .hasMessage("Tỷ lệ cước phải trong [0, 1]");
+    }
+
+    @Test
+    void rejectsUnrealisticMoneyValues() {
+        assertThatThrownBy(() -> OrderService.calculate(100_000_001L, 0L, (short) 1, RATE))
+                .hasMessage("Tiền đơn quá lớn");
+        assertThatThrownBy(() -> OrderService.calculate(100_000L, 20_000_001L, (short) 1, RATE))
+                .hasMessage("Tiền bo quá lớn");
     }
 }

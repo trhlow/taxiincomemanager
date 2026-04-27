@@ -23,6 +23,8 @@ import java.util.UUID;
 public class OrderService {
 
     public static final BigDecimal DEFAULT_FEE_RATE = new BigDecimal("0.300");
+    public static final long MAX_ORDER_AMOUNT = 100_000_000L;
+    public static final long MAX_TIP_AMOUNT = 20_000_000L;
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
@@ -48,8 +50,14 @@ public class OrderService {
         if (orderAmount < 0) {
             throw ApiException.badRequest("INVALID_AMOUNT", "Tiền đơn không được âm");
         }
+        if (orderAmount > MAX_ORDER_AMOUNT) {
+            throw ApiException.badRequest("INVALID_AMOUNT", "Tiền đơn quá lớn");
+        }
         if (tipAmount < 0) {
             throw ApiException.badRequest("INVALID_AMOUNT", "Tiền bo không được âm");
+        }
+        if (tipAmount > MAX_TIP_AMOUNT) {
+            throw ApiException.badRequest("INVALID_AMOUNT", "Tiền bo quá lớn");
         }
         if (taxiCount != 1 && taxiCount != 2) {
             throw ApiException.badRequest("INVALID_TAXI_COUNT", "Số tài chỉ được 1 hoặc 2");

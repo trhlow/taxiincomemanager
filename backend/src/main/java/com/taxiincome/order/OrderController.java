@@ -5,6 +5,9 @@ import com.taxiincome.order.dto.DailyOrdersResponse;
 import com.taxiincome.order.dto.OrderResponse;
 import com.taxiincome.order.dto.PeriodOrdersResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +22,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/orders")
 public class OrderController {
 
@@ -42,8 +46,8 @@ public class OrderController {
 
     @GetMapping("/monthly")
     public List<DailyOrdersResponse> monthly(
-            @RequestParam("year") int year,
-            @RequestParam("month") int month) {
+            @RequestParam("year") @Min(2020) @Max(2100) int year,
+            @RequestParam("month") @Min(1) @Max(12) int month) {
         return orderService.monthly(year, month);
     }
 
