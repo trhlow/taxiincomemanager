@@ -27,14 +27,22 @@ class ApiClient {
     return 'http://localhost:8081';
   }
 
+  /// In **release** builds a key must be supplied via `--dart-define=TAXI_API_KEY=...`.
+  /// Debug/profile keeps a dev default so local `flutter run` works without defines.
   static String defaultApiKey() {
-    return const String.fromEnvironment(
-      'TAXI_API_KEY',
-      defaultValue: 'dev-local-api-key',
-    );
+    const fromEnv = String.fromEnvironment('TAXI_API_KEY');
+    if (fromEnv.isNotEmpty) return fromEnv;
+    if (kReleaseMode) {
+      throw StateError(
+        'Missing TAXI_API_KEY. Release builds must pass '
+        '--dart-define=TAXI_API_KEY=<server key> (do not ship a default secret).',
+      );
+    }
+    return 'dev-local-api-key';
   }
 
   static ApiClient create(LocalStorage storage) {
+    final apiKey = defaultApiKey();
     final base = storage.baseUrl ?? defaultBaseUrl();
     final dio = Dio(BaseOptions(
       baseUrl: base,
@@ -46,7 +54,7 @@ class ApiClient {
     ));
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        options.headers['X-Api-Key'] = defaultApiKey();
+        options.headers['X-Api-Key'] = apiKey;
         final uid = storage.userId;
         if (uid != null && uid.isNotEmpty) {
           options.headers['X-User-Id'] = uid;
