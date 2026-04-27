@@ -43,4 +43,4 @@ Use Conventional Commits where possible:
 
 ## History rewriting
 
-Avoid rewriting published history unless necessary. If you must rewrite `master`, coordinate because it requires force-push.
+Avoid rewriting published history unless necessary. If you must rewrite `main`, coordinate because it requires force-push.
