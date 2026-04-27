@@ -8,14 +8,24 @@ import 'features/onboarding/onboarding_screen.dart';
 import 'features/personal/personal_screen.dart';
 import 'home_shell.dart';
 
-class TaxiIncomeApp extends ConsumerWidget {
+class TaxiIncomeApp extends ConsumerStatefulWidget {
   const TaxiIncomeApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final router = GoRouter(
+  ConsumerState<TaxiIncomeApp> createState() => _TaxiIncomeAppState();
+}
+
+class _TaxiIncomeAppState extends ConsumerState<TaxiIncomeApp> {
+  late final _UserChangeNotifier _userChanges;
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _userChanges = _UserChangeNotifier(ref);
+    _router = GoRouter(
       initialLocation: '/',
-      refreshListenable: _UserChangeNotifier(ref),
+      refreshListenable: _userChanges,
       redirect: (context, state) {
         final user = ref.read(currentUserProvider);
         final loc = state.matchedLocation;
@@ -39,12 +49,21 @@ class TaxiIncomeApp extends ConsumerWidget {
         ),
       ],
     );
+  }
 
+  @override
+  void dispose() {
+    _userChanges.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Taxi Income',
       theme: buildAppTheme(),
       debugShowCheckedModeBanner: false,
-      routerConfig: router,
+      routerConfig: _router,
       supportedLocales: const [Locale('vi', 'VN'), Locale('en', 'US')],
     );
   }
@@ -52,7 +71,18 @@ class TaxiIncomeApp extends ConsumerWidget {
 
 class _UserChangeNotifier extends ChangeNotifier {
   _UserChangeNotifier(this.ref) {
-    ref.listen(currentUserProvider, (_, __) => notifyListeners());
+    _sub = ref.listen<CurrentUser?>(
+      currentUserProvider,
+      (_, __) => notifyListeners(),
+    );
   }
+
   final WidgetRef ref;
+  ProviderSubscription<CurrentUser?>? _sub;
+
+  @override
+  void dispose() {
+    _sub?.close();
+    super.dispose();
+  }
 }
