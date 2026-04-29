@@ -56,9 +56,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex) {
+    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex,
+                                                          HttpServletRequest request) {
+        log.warn("Illegal argument at {}: {}", request.getRequestURI(), ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiError("INVALID_ARGUMENT", ex.getMessage()));
+                .body(new ApiError("INVALID_REQUEST", "Dữ liệu yêu cầu không hợp lệ"));
     }
 
     @ExceptionHandler(Exception.class)

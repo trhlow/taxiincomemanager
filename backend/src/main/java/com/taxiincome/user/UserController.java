@@ -1,6 +1,7 @@
 package com.taxiincome.user;
 
 import com.taxiincome.user.dto.InitUserRequest;
+import com.taxiincome.user.dto.InitUserResponse;
 import com.taxiincome.user.dto.UserResponse;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,8 +21,8 @@ public class UserController {
     }
 
     @PostMapping("/init")
-    public UserResponse init(@Valid @RequestBody InitUserRequest req) {
-        return UserResponse.of(userService.initOrGetUser(req));
+    public InitUserResponse init(@Valid @RequestBody InitUserRequest req) {
+        return userService.initWithAccessToken(req);
     }
 
     @GetMapping("/me")

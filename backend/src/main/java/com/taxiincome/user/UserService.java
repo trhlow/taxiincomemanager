@@ -2,7 +2,9 @@ package com.taxiincome.user;
 
 import com.taxiincome.common.ApiException;
 import com.taxiincome.common.UserContext;
+import com.taxiincome.security.DeviceTokenService;
 import com.taxiincome.user.dto.InitUserRequest;
+import com.taxiincome.user.dto.InitUserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,10 +15,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserContext userContext;
+    private final DeviceTokenService deviceTokenService;
 
-    public UserService(UserRepository userRepository, UserContext userContext) {
+    public UserService(UserRepository userRepository, UserContext userContext,
+                        DeviceTokenService deviceTokenService) {
         this.userRepository = userRepository;
         this.userContext = userContext;
+        this.deviceTokenService = deviceTokenService;
     }
 
     /**
@@ -37,6 +42,16 @@ public class UserService {
                     u.setNameLocked(true);
                     return userRepository.save(u);
                 });
+    }
+
+    /**
+     * Ensures user exists, then issues a new opaque access token (device session).
+     */
+    @Transactional
+    public InitUserResponse initWithAccessToken(InitUserRequest req) {
+        User user = initOrGetUser(req);
+        String token = deviceTokenService.issueToken(user.getId());
+        return InitUserResponse.of(user, token);
     }
 
     @Transactional(readOnly = true)

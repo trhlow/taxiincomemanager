@@ -26,33 +26,36 @@ import java.util.List;
 @RequestMapping("/api/orders")
 public class OrderController {
 
-    private final OrderService orderService;
+    private final OrderCommandService orderCommandService;
+    private final OrderQueryService orderQueryService;
 
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
+    public OrderController(OrderCommandService orderCommandService,
+                           OrderQueryService orderQueryService) {
+        this.orderCommandService = orderCommandService;
+        this.orderQueryService = orderQueryService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse create(@Valid @RequestBody CreateOrderRequest req) {
-        return orderService.create(req);
+        return orderCommandService.create(req);
     }
 
     @GetMapping("/by-date")
     public DailyOrdersResponse byDate(
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return orderService.byDate(date);
+        return orderQueryService.byDate(date);
     }
 
     @GetMapping("/monthly")
     public List<DailyOrdersResponse> monthly(
             @RequestParam("year") @Min(2020) @Max(2100) int year,
             @RequestParam("month") @Min(1) @Max(12) int month) {
-        return orderService.monthly(year, month);
+        return orderQueryService.monthly(year, month);
     }
 
     @GetMapping("/period/current")
     public PeriodOrdersResponse currentPeriod() {
-        return orderService.currentPeriod();
+        return orderQueryService.currentPeriod();
     }
 }

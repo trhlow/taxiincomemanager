@@ -21,8 +21,8 @@ public class UserContext {
 
     public UUID requireUserId() {
         if (userId == null) {
-            throw ApiException.unauthorized("MISSING_USER",
-                    "Thiếu header X-User-Id");
+            throw ApiException.unauthorized("UNAUTHENTICATED",
+                    "Phiên đăng nhập không hợp lệ hoặc đã hết hạn");
         }
         return userId;
     }

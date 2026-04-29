@@ -19,8 +19,11 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 
     private final String apiKey;
 
-    public ApiKeyFilter(@Value("${app.api-key}") String apiKey) {
+    private final FilterJsonResponses json;
+
+    public ApiKeyFilter(@Value("${app.api-key}") String apiKey, FilterJsonResponses json) {
         this.apiKey = apiKey;
+        this.json = json;
     }
 
     @Override
@@ -35,12 +38,7 @@ public class ApiKeyFilter extends OncePerRequestFilter {
                                     FilterChain chain) throws ServletException, IOException {
         String provided = request.getHeader(HEADER);
         if (apiKey == null || apiKey.isBlank() || !apiKey.equals(provided)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("""
-                    {"code":"INVALID_API_KEY","message":"X-Api-Key không hợp lệ"}
-                    """);
+            json.unauthorized(response, "INVALID_API_KEY", "X-Api-Key không hợp lệ");
             return;
         }
 
