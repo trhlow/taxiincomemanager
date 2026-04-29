@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/json_parse.dart';
+
 @immutable
 class DashboardSummary {
   final DateTime today;
@@ -26,17 +28,18 @@ class DashboardSummary {
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
     return DashboardSummary(
-      today: DateTime.parse(json['today'] as String),
-      todayTotalNet: (json['todayTotalNet'] as num).toInt(),
-      todayOrderCount: (json['todayOrderCount'] as num).toInt(),
+      today: parseLocalDate(json['today'].toString()),
+      todayTotalNet: parseRequiredInt(json['todayTotalNet'], 'todayTotalNet'),
+      todayOrderCount: parseRequiredInt(json['todayOrderCount'], 'todayOrderCount'),
       currentPeriod: PeriodSummary.fromJson(
           Map<String, dynamic>.from(json['currentPeriod'] as Map)),
       currentMonth: MonthSummary.fromJson(
           Map<String, dynamic>.from(json['currentMonth'] as Map)),
-      totalTip: (json['totalTip'] as num).toInt(),
-      totalFee: (json['totalFee'] as num).toInt(),
-      workingDaysMonth: (json['workingDaysMonth'] as num).toInt(),
-      workingDaysCurrentPeriod: (json['workingDaysCurrentPeriod'] as num).toInt(),
+      totalTip: parseRequiredInt(json['totalTip'], 'totalTip'),
+      totalFee: parseRequiredInt(json['totalFee'], 'totalFee'),
+      workingDaysMonth: parseRequiredInt(json['workingDaysMonth'], 'workingDaysMonth'),
+      workingDaysCurrentPeriod:
+          parseRequiredInt(json['workingDaysCurrentPeriod'], 'workingDaysCurrentPeriod'),
     );
   }
 }
@@ -58,11 +61,11 @@ class PeriodSummary {
   });
 
   factory PeriodSummary.fromJson(Map<String, dynamic> json) => PeriodSummary(
-        index: (json['index'] as num).toInt(),
-        start: DateTime.parse(json['start'] as String),
-        end: DateTime.parse(json['end'] as String),
-        totalNet: (json['totalNet'] as num).toInt(),
-        orderCount: (json['orderCount'] as num).toInt(),
+        index: parseRequiredInt(json['index'], 'index'),
+        start: parseLocalDate(json['start'].toString()),
+        end: parseLocalDate(json['end'].toString()),
+        totalNet: parseRequiredInt(json['totalNet'], 'totalNet'),
+        orderCount: parseRequiredInt(json['orderCount'], 'orderCount'),
       );
 }
 
@@ -81,9 +84,9 @@ class MonthSummary {
   });
 
   factory MonthSummary.fromJson(Map<String, dynamic> json) => MonthSummary(
-        year: (json['year'] as num).toInt(),
-        month: (json['month'] as num).toInt(),
-        totalNet: (json['totalNet'] as num).toInt(),
-        orderCount: (json['orderCount'] as num).toInt(),
+        year: parseRequiredInt(json['year'], 'year'),
+        month: parseRequiredInt(json['month'], 'month'),
+        totalNet: parseRequiredInt(json['totalNet'], 'totalNet'),
+        orderCount: parseRequiredInt(json['orderCount'], 'orderCount'),
       );
 }

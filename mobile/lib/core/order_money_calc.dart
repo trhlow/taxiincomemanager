@@ -1,11 +1,11 @@
-/// Pure Dart mirror of backend [MoneyUtils] + default 30% fee path used by [OrderService].
+/// Pure Dart mirror of backend [MoneyUtils] + default 30% fee path used by [OrderCalculationService].
 ///
 /// Backend: `feeAmount = roundHalfUp(amount * rate)` with rate as [BigDecimal],
 /// default `0.300`. For rates with at most 3 decimal places, `rate * 1000` is exact.
 class OrderMoneyCalc {
   OrderMoneyCalc._();
 
-  /// Default fee 30% — matches `OrderService.DEFAULT_FEE_RATE` ("0.300").
+  /// Default fee 30% — matches `OrderCalculationService.DEFAULT_FEE_RATE` ("0.300").
   static const int defaultFeeRateMillis = 300;
 
   /// Matches `MoneyUtils.multiplyRate` for nonnegative amount and rate in [0, 1]

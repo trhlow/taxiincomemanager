@@ -70,9 +70,9 @@ class ApiClient {
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
         options.headers['X-Api-Key'] = apiKey;
-        final uid = storage.userId;
-        if (uid != null && uid.isNotEmpty) {
-          options.headers['X-User-Id'] = uid;
+        final token = storage.accessToken;
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
         }
         handler.next(options);
       },

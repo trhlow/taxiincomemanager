@@ -21,6 +21,9 @@ final currentUserProvider = StateProvider<CurrentUser?>((ref) {
   final storage = ref.watch(localStorageProvider);
   final id = storage.userId;
   final name = storage.displayName;
-  if (id == null || name == null) return null;
+  final token = storage.accessToken;
+  if (id == null || name == null || token == null || token.isEmpty) {
+    return null;
+  }
   return CurrentUser(userId: id, displayName: name);
 });

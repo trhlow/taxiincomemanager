@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/api_client.dart';
+import '../../core/network_feedback.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
+import '../dashboard/dashboard_repository.dart';
 import '../../widgets/info_banner.dart';
 import '../../widgets/source_badge.dart';
-
 class PersonalScreen extends ConsumerStatefulWidget {
   const PersonalScreen({super.key});
 
@@ -19,6 +21,9 @@ class _PersonalScreenState extends ConsumerState<PersonalScreen> {
   bool _saving = false;
   bool _hasChanges = false;
   String _initialUrl = '';
+  PackageInfo? _pkg;
+  bool _pinging = false;
+  String? _pingHint;
 
   @override
   void initState() {
@@ -27,6 +32,9 @@ class _PersonalScreenState extends ConsumerState<PersonalScreen> {
     _initialUrl = storage.baseUrl ?? ApiClient.defaultBaseUrl();
     _baseUrlCtrl = TextEditingController(text: _initialUrl);
     _baseUrlCtrl.addListener(_onChanged);
+    PackageInfo.fromPlatform().then((p) {
+      if (mounted) setState(() => _pkg = p);
+    });
   }
 
   @override
@@ -65,6 +73,31 @@ class _PersonalScreenState extends ConsumerState<PersonalScreen> {
           SnackBar(content: Text('Lỗi: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _pingBackend() async {
+    setState(() {
+      _pinging = true;
+      _pingHint = null;
+    });
+    try {
+      await ref.read(dashboardRepositoryProvider).summary();
+      if (!mounted) return;
+      setState(() {
+        _pinging = false;
+        _pingHint = 'Kết nối OK (/api/dashboard)';
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _pinging = false);
+      showApiErrorSnack(context, e);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _pinging = false;
+        _pingHint = 'Lỗi: $e';
+      });
     }
   }
 
@@ -155,6 +188,14 @@ class _PersonalScreenState extends ConsumerState<PersonalScreen> {
                       size: 16, color: AppColors.primary),
                   onTap: _editApiUrl,
                 ),
+                _SettingItem(
+                  icon: Icons.cloud_sync_rounded,
+                  label: 'Kiểm tra máy chủ',
+                  value: _pinging
+                      ? 'Đang gọi /api/dashboard…'
+                      : (_pingHint ?? 'Chạm để kiểm tra'),
+                  onTap: _pinging ? null : _pingBackend,
+                ),
                 const _SettingItem(
                   icon: Icons.schedule_rounded,
                   label: 'Múi giờ',
@@ -241,8 +282,10 @@ class _PersonalScreenState extends ConsumerState<PersonalScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            const InfoBanner(
-              message: 'Phiên bản: MVP 1.0',
+            InfoBanner(
+              message: _pkg == null
+                  ? 'Đang đọc thông tin phiên bản…'
+                  : 'Phiên bản ${_pkg!.version} (${_pkg!.buildNumber})',
               icon: Icons.info_outline_rounded,
             ),
           ],

@@ -1,3 +1,5 @@
+import '../../core/json_parse.dart';
+
 class OrderModel {
   final String id;
   final int orderAmount;
@@ -30,17 +32,17 @@ class OrderModel {
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
       id: json['id'].toString(),
-      orderAmount: (json['orderAmount'] as num).toInt(),
-      feeRate: (json['feeRate'] as num).toDouble(),
-      feeAmount: (json['feeAmount'] as num).toInt(),
-      tipAmount: (json['tipAmount'] as num).toInt(),
-      taxiCount: (json['taxiCount'] as num).toInt(),
-      subtotal: (json['subtotal'] as num).toInt(),
-      netAmount: (json['netAmount'] as num).toInt(),
-      orderDate: DateTime.parse(json['orderDate'] as String),
-      orderTime: (json['orderTime'] as String).substring(0, 5),
-      note: json['note'] as String?,
-      sourceType: (json['sourceType'] as String?) ?? 'MANUAL',
+      orderAmount: parseRequiredInt(json['orderAmount'], 'orderAmount'),
+      feeRate: parseRequiredDouble(json['feeRate'], 'feeRate'),
+      feeAmount: parseRequiredInt(json['feeAmount'], 'feeAmount'),
+      tipAmount: parseRequiredInt(json['tipAmount'], 'tipAmount'),
+      taxiCount: parseRequiredInt(json['taxiCount'], 'taxiCount'),
+      subtotal: parseRequiredInt(json['subtotal'], 'subtotal'),
+      netAmount: parseRequiredInt(json['netAmount'], 'netAmount'),
+      orderDate: parseLocalDate(json['orderDate'].toString()),
+      orderTime: normalizeOrderTime(json['orderTime']),
+      note: parseOptionalString(json['note']),
+      sourceType: parseOptionalString(json['sourceType']) ?? 'MANUAL',
     );
   }
 }
@@ -66,12 +68,12 @@ class DailyOrders {
 
   factory DailyOrders.fromJson(Map<String, dynamic> json) {
     return DailyOrders(
-      date: DateTime.parse(json['date'] as String),
-      orderCount: (json['orderCount'] as num).toInt(),
-      totalOrderAmount: (json['totalOrderAmount'] as num).toInt(),
-      totalFee: (json['totalFee'] as num).toInt(),
-      totalTip: (json['totalTip'] as num).toInt(),
-      totalNet: (json['totalNet'] as num).toInt(),
+      date: parseLocalDate(json['date'].toString()),
+      orderCount: parseRequiredInt(json['orderCount'], 'orderCount'),
+      totalOrderAmount: parseRequiredInt(json['totalOrderAmount'], 'totalOrderAmount'),
+      totalFee: parseRequiredInt(json['totalFee'], 'totalFee'),
+      totalTip: parseRequiredInt(json['totalTip'], 'totalTip'),
+      totalNet: parseRequiredInt(json['totalNet'], 'totalNet'),
       orders: ((json['orders'] as List?) ?? const [])
           .map((e) => OrderModel.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),

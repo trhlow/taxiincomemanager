@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/format.dart';
+import '../../core/network_feedback.dart';
 import '../../core/theme.dart';
 import '../../widgets/info_banner.dart';
 import '../../widgets/source_badge.dart';
@@ -309,9 +310,7 @@ class _DayRow extends ConsumerWidget {
       ref.invalidate(weekCheckProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        showApiErrorSnack(context, e);
       }
     }
   }

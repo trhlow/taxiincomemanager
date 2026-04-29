@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/network_feedback.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../widgets/info_banner.dart';
@@ -65,7 +66,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         );
       }
     } on ApiException catch (e) {
-      setState(() => _error = e.message);
+      setState(() => _error = userFacingApiMessage(e));
     } catch (e) {
       setState(() => _error = 'Lỗi không xác định: $e');
     } finally {

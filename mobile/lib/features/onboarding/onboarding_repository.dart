@@ -13,7 +13,11 @@ class OnboardingRepository {
     });
     final id = res['id'].toString();
     final name = (res['displayName'] ?? displayName).toString();
-    await _api.storage.setUser(userId: id, displayName: name);
+    final token = res['accessToken']?.toString();
+    if (token == null || token.isEmpty) {
+      throw StateError('Server did not return accessToken');
+    }
+    await _api.storage.setSession(userId: id, displayName: name, accessToken: token);
     return (userId: id, displayName: name);
   }
 }

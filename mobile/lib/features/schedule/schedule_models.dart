@@ -1,3 +1,5 @@
+import '../../core/json_parse.dart';
+
 class ScheduleItem {
   final String id;
   final DateTime workDate;
@@ -6,7 +8,7 @@ class ScheduleItem {
 
   factory ScheduleItem.fromJson(Map<String, dynamic> json) => ScheduleItem(
         id: json['id'].toString(),
-        workDate: DateTime.parse(json['workDate'] as String),
+        workDate: parseLocalDate(json['workDate'].toString()),
         shiftType: json['shiftType'] as String,
       );
 }
@@ -18,8 +20,8 @@ class WeekSchedule {
   WeekSchedule({required this.weekStart, required this.weekEnd, required this.shifts});
 
   factory WeekSchedule.fromJson(Map<String, dynamic> json) => WeekSchedule(
-        weekStart: DateTime.parse(json['weekStart'] as String),
-        weekEnd: DateTime.parse(json['weekEnd'] as String),
+        weekStart: parseLocalDate(json['weekStart'].toString()),
+        weekEnd: parseLocalDate(json['weekEnd'].toString()),
         shifts: ((json['shifts'] as List?) ?? const [])
             .map((e) => ScheduleItem.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList(),
@@ -56,12 +58,12 @@ class WeekCheck {
   });
 
   factory WeekCheck.fromJson(Map<String, dynamic> json) => WeekCheck(
-        weekStart: DateTime.parse(json['weekStart'] as String),
-        weekEnd: DateTime.parse(json['weekEnd'] as String),
-        morningCount: (json['morningCount'] as num).toInt(),
-        eveningCount: (json['eveningCount'] as num).toInt(),
-        requiredMorning: (json['requiredMorning'] as num).toInt(),
-        requiredEvening: (json['requiredEvening'] as num).toInt(),
+        weekStart: parseLocalDate(json['weekStart'].toString()),
+        weekEnd: parseLocalDate(json['weekEnd'].toString()),
+        morningCount: parseRequiredInt(json['morningCount'], 'morningCount'),
+        eveningCount: parseRequiredInt(json['eveningCount'], 'eveningCount'),
+        requiredMorning: parseRequiredInt(json['requiredMorning'], 'requiredMorning'),
+        requiredEvening: parseRequiredInt(json['requiredEvening'], 'requiredEvening'),
         isComplete: json['isComplete'] as bool,
         message: json['message'] as String,
       );

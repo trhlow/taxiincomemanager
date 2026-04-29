@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/format.dart';
+import '../../core/network_feedback.dart';
 import '../../core/order_money_calc.dart';
 import '../../core/theme.dart';
 import '../../widgets/info_banner.dart';
@@ -19,7 +20,7 @@ class OrderEntryScreen extends ConsumerStatefulWidget {
 }
 
 class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
-  /// Mirrors backend [OrderService] caps.
+  /// Mirrors backend [OrderCalculationService] caps.
   static const int _maxOrderAmount = 100000000;
   static const int _maxTipAmount = 20000000;
 
@@ -101,9 +102,7 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
       ref.invalidate(dailyOrdersProvider);
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      showApiErrorSnack(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }

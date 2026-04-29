@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/api_client.dart';
 import '../../core/format.dart';
+import '../../core/network_feedback.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../widgets/hero_gradient_card.dart';
@@ -20,35 +22,42 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final summaryAsync = ref.watch(dashboardSummaryProvider);
-    final today = DateTime.now();
-    final todayOrdersAsync = ref.watch(dailyOrdersProvider(
-      DateTime(today.year, today.month, today.day),
-    ));
 
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(dashboardSummaryProvider);
-            ref.invalidate(dailyOrdersProvider);
+            final s =
+                await ref.read(dashboardSummaryProvider.future);
+            ref.invalidate(dailyOrdersProvider(s.today));
           },
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
-              _Header(today: today, onBellTap: () {}),
-              const SizedBox(height: 14),
-              _GreetingCard(
-                name: user?.displayName ?? '...',
-                onTap: onOpenPersonal,
-              ),
-              const SizedBox(height: 14),
               summaryAsync.when(
-                data: (s) => _content(context, s, todayOrdersAsync),
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: 80),
                   child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (e, _) => _buildError(context, ref, e.toString()),
+                error: (e, _) => _buildError(context, ref, e),
+                data: (s) {
+                  final todayOrdersAsync =
+                      ref.watch(dailyOrdersProvider(s.today));
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _Header(today: s.today, onBellTap: () {}),
+                      const SizedBox(height: 14),
+                      _GreetingCard(
+                        name: user?.displayName ?? '...',
+                        onTap: onOpenPersonal,
+                      ),
+                      const SizedBox(height: 14),
+                      _content(context, s, todayOrdersAsync),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -150,7 +159,9 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildError(BuildContext context, WidgetRef ref, String msg) {
+  Widget _buildError(BuildContext context, WidgetRef ref, Object e) {
+    final msg =
+        e is ApiException ? userFacingApiMessage(e) : e.toString();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
