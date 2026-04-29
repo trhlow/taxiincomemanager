@@ -52,6 +52,25 @@ docker compose up -d
 
 Database listen trên `localhost:5433` (host) → container port 5432. Tên DB, user, password và API key lấy từ `.env`. (Dùng 5433 thay vì 5432 để tránh đụng với Postgres khác có thể đã cài sẵn trên máy.)
 
+`docker-compose.yml` **healthcheck** dùng `$$POSTGRES_USER` / `$$POSTGRES_DB` trong container để luôn khớp các biến `POSTGRES_*` (tránh báo unhealthy dù Postgres chạy vì lệnh `pg_isready` sai user/db).
+
+### Kiểm thử backend trong CI và local
+
+- **GitHub Actions:** workflow [`.github/workflows/backend-ci.yml`](.github/workflows/backend-ci.yml) chạy `mvn test` (unit) và `mvn verify -Pintegration` (integration Testcontainers trên Ubuntu — có Docker sẵn).
+- **Local — chỉ unit test:**
+
+```powershell
+cd backend
+mvn test
+```
+
+- **Local / CI — integration (cần Docker cho Testcontainers PostgreSQL):**
+
+```powershell
+cd backend
+mvn verify -Pintegration
+```
+
 ### 2. Chạy backend
 
 ```powershell
@@ -66,17 +85,16 @@ Smoke test nhanh bằng curl:
 ```powershell
 $API_KEY = "dev-local-api-key"
 
-# Tạo user lần đầu
-curl -X POST http://localhost:8081/api/users/init -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -d "{\"displayName\":\"Long\"}"
-
-# Lấy userId từ response, gán vào biến (ví dụ $UID)
-$UID = "<paste-userId-here>"
+# Tạo user lần đầu (response có `accessToken` — chỉ hiển thị một lần)
+$response = curl -s -X POST http://localhost:8081/api/users/init -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -d "{\"displayName\":\"Long\"}"
+# Gán token (PowerShell ví dụ: $TOKEN = ($response | ConvertFrom-Json).accessToken )
+$TOKEN = "<paste-accessToken-here>"
 
 # Nhập đơn
-curl -X POST http://localhost:8081/api/orders -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -H "X-User-Id: $UID" -d "{\"orderAmount\":444000,\"tipAmount\":0,\"taxiCount\":2}"
+curl -X POST http://localhost:8081/api/orders -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -H "Authorization: Bearer $TOKEN" -d "{\"orderAmount\":444000,\"tipAmount\":0,\"taxiCount\":2}"
 
 # Xem dashboard
-curl http://localhost:8081/api/dashboard -H "X-Api-Key: $API_KEY" -H "X-User-Id: $UID"
+curl http://localhost:8081/api/dashboard -H "X-Api-Key: $API_KEY" -H "Authorization: Bearer $TOKEN"
 ```
 
 ### 3. Chạy mobile app
@@ -98,7 +116,7 @@ Cấu hình base URL backend (có thể chỉnh ở màn hình onboarding):
 - Android emulator: `http://10.0.2.2:8081`
 - iOS simulator / desktop: `http://localhost:8081`
 
-App sẽ hỏi nhập tên ở lần mở đầu tiên, sau đó lưu `userId` vào `SharedPreferences` và gửi qua header `X-User-Id` ở mọi request. Mọi request API cũng gửi `X-Api-Key`.
+App sẽ hỏi nhập tên ở lần mở đầu tiên, sau đó gọi `POST /api/users/init` và lưu **`accessToken`** (opaque) cùng `userId` trong `SharedPreferences`. Mọi request sau init gửi `Authorization: Bearer <accessToken>` và header `X-Api-Key`.
 
 ## API tóm tắt
 
@@ -118,7 +136,7 @@ App sẽ hỏi nhập tên ở lần mở đầu tiên, sau đó lưu `userId` v
 | GET    | `/api/schedules/week/check?weekStart=YYYY-MM-DD`       | Kiểm tra đủ 1 sáng + 2 tối                       |
 
 
-Mọi request cần header `X-Api-Key`. Mọi request sau khi init user cần thêm `X-User-Id`.
+Mọi request cần header `X-Api-Key`. Mọi request sau khi init user cần thêm `Authorization: Bearer <accessToken>` (lấy từ response init; không dùng `X-User-Id` làm credential).
 
 ## Stop services
 
