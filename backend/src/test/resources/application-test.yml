@@ -10,5 +10,7 @@ spring:
 
 app:
   api-key: test-integration-api-key
+  setup:
+    secret: test-setup-secret
   cors:
     allowed-origins: http://localhost:8080

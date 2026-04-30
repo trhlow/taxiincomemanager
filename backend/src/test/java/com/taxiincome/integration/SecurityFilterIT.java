@@ -112,7 +112,9 @@ class SecurityFilterIT {
         MvcResult init = mockMvc.perform(post("/api/users/init")
                         .header("X-Api-Key", API_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"displayName\":\"Integration\"}"))
+                        .content("""
+                                {"displayName":"Integration","setupSecret":"test-setup-secret"}
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isString())
                 .andExpect(jsonPath("$.id").isString())

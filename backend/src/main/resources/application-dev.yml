@@ -22,3 +22,7 @@ logging:
   level:
     org.hibernate.SQL: warn
     com.taxiincome: debug
+
+server:
+  error:
+    include-message: always

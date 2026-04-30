@@ -6,7 +6,7 @@ spring:
       - optional:file:../.env[.properties]
       - optional:file:.env[.properties]
   profiles:
-    active: dev
+    default: dev
   jackson:
     default-property-inclusion: non_null
     serialization:
@@ -15,9 +15,11 @@ spring:
 server:
   port: 8081
   error:
-    include-message: always
+    include-message: never
 
 app:
   api-key: ${APP_API_KEY}
+  setup:
+    secret: ${APP_SETUP_SECRET}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:8082,http://127.0.0.1:8082}
