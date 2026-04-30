@@ -17,6 +17,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _nameCtrl = TextEditingController();
+  final _setupSecretCtrl = TextEditingController();
   final _baseUrlCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
@@ -31,6 +32,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _setupSecretCtrl.dispose();
     _baseUrlCtrl.dispose();
     super.dispose();
   }
@@ -41,20 +43,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       setState(() => _error = 'Vui lòng nhập tên');
       return;
     }
+    final setupSecret = _setupSecretCtrl.text;
+    if (setupSecret.trim().isEmpty) {
+      setState(() => _error = 'Vui lòng nhập setup secret');
+      return;
+    }
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final storage = ref.read(localStorageProvider);
-      final url = useDefault
-          ? ApiClient.defaultBaseUrl()
-          : _baseUrlCtrl.text.trim();
+      final url =
+          useDefault ? ApiClient.defaultBaseUrl() : _baseUrlCtrl.text.trim();
       await storage.setBaseUrl(url);
 
       final api = ApiClient.create(storage);
       final repo = OnboardingRepository(api);
-      final result = await repo.initUser(name);
+      final result = await repo.initUser(name, setupSecret);
 
       ref.read(currentUserProvider.notifier).state = CurrentUser(
         userId: result.userId,
@@ -101,8 +107,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  AppColors.primary.withValues(alpha: 0.25),
+                              color: AppColors.primary.withValues(alpha: 0.25),
                               blurRadius: 14,
                               offset: const Offset(0, 6),
                             ),
@@ -159,6 +164,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         contentPadding: EdgeInsets.zero,
                       ),
                       onSubmitted: (_) => _submit(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _LabeledField(
+                    icon: Icons.key_rounded,
+                    label: 'Setup secret',
+                    child: TextField(
+                      controller: _setupSecretCtrl,
+                      obscureText: true,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        hintText: 'APP_SETUP_SECRET',
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),

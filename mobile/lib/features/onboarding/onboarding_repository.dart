@@ -7,9 +7,11 @@ class OnboardingRepository {
   OnboardingRepository(this._api);
 
   /// Returns the saved (id, displayName) pair.
-  Future<({String userId, String displayName})> initUser(String displayName) async {
+  Future<({String userId, String displayName})> initUser(
+      String displayName, String setupSecret) async {
     final res = await _api.postJson('/api/users/init', body: {
       'displayName': displayName.trim(),
+      'setupSecret': setupSecret,
     });
     final id = res['id'].toString();
     final name = (res['displayName'] ?? displayName).toString();
@@ -17,7 +19,8 @@ class OnboardingRepository {
     if (token == null || token.isEmpty) {
       throw StateError('Server did not return accessToken');
     }
-    await _api.storage.setSession(userId: id, displayName: name, accessToken: token);
+    await _api.storage
+        .setSession(userId: id, displayName: name, accessToken: token);
     return (userId: id, displayName: name);
   }
 }

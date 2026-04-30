@@ -19,6 +19,11 @@ class ApiClient {
 
   ApiClient._(this._dio, this._storage);
 
+  @visibleForTesting
+  factory ApiClient.forTest(Dio dio, LocalStorage storage) {
+    return ApiClient._(dio, storage);
+  }
+
   static String defaultBaseUrl() {
     if (kIsWeb) return 'http://localhost:8081';
     try {
@@ -106,10 +111,21 @@ class ApiClient {
         code: 'NETWORK_ERROR',
         message: e.message ?? 'Không kết nối được tới máy chủ',
       );
+    } on FormatException {
+      throw ApiException(
+        code: 'INVALID_RESPONSE',
+        message: 'Dữ liệu từ server không hợp lệ. Vui lòng thử lại.',
+      );
+    } on TypeError {
+      throw ApiException(
+        code: 'INVALID_RESPONSE',
+        message: 'Dữ liệu từ server không đúng định dạng. Vui lòng thử lại.',
+      );
     }
   }
 
-  Future<Map<String, dynamic>> getJson(String path, {Map<String, dynamic>? query}) {
+  Future<Map<String, dynamic>> getJson(String path,
+      {Map<String, dynamic>? query}) {
     return _wrap(
       () => _dio.get(path, queryParameters: query),
       (data) => Map<String, dynamic>.from(data as Map),
