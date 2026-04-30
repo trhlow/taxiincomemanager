@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -55,6 +56,25 @@ class SecurityFilterIT {
 
     @Autowired
     private DeviceTokenRepository deviceTokenRepository;
+
+    @Test
+    void corsPreflight_allowsCurrentAuthHeadersOnly() throws Exception {
+        MvcResult result = mockMvc.perform(options("/api/dashboard")
+                        .header("Origin", "http://localhost:8080")
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers",
+                                "Authorization, Content-Type, X-Api-Key"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String allowHeaders = result.getResponse().getHeader("Access-Control-Allow-Headers");
+        String exposeHeaders = result.getResponse().getHeader("Access-Control-Expose-Headers");
+
+        assertThat(allowHeaders).contains("Authorization", "Content-Type", "X-Api-Key");
+        assertThat(allowHeaders).doesNotContain("X-User-Id");
+        assertThat(exposeHeaders).isNull();
+    }
+
     @Test
     void missingApiKey_returns401() throws Exception {
         mockMvc.perform(get("/api/dashboard"))
