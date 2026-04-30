@@ -1,0 +1,30 @@
+---
+description: Final review checklist before completing an AI coding task
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Review Before Done
+
+Before finalizing any coding task, verify:
+
+1. The change solves the requested problem.
+2. The change does not introduce unrelated refactors.
+3. Security is not weakened.
+4. User data remains isolated.
+5. Money calculations are deterministic.
+6. Date/cycle logic handles boundary cases.
+7. Errors are handled cleanly.
+8. Tests were added/updated where practical.
+9. Relevant commands were run:
+   - Backend: ./mvnw test or mvn test
+   - Flutter: flutter analyze and flutter test
+10. If tests were not run, explain the exact reason.
+
+Final response must include:
+
+- What changed
+- Files touched
+- Tests/checks run
+- Remaining risks or assumptions

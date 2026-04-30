@@ -1,0 +1,60 @@
+---
+description: Spring Boot backend rules
+globs:
+  - "backend/**/*.java"
+  - "**/src/main/java/**/*.java"
+  - "**/src/test/java/**/*.java"
+  - "**/pom.xml"
+alwaysApply: false
+---
+
+# Spring Boot Backend Rules
+
+## Architecture
+
+Use layered architecture:
+
+- Controller: request/response only
+- Service: business logic
+- Repository: persistence
+- DTO: external payload
+- Entity: database model
+- Mapper: conversion
+- Exception: error handling
+- Security: auth/authz
+
+Controllers must not contain business logic.
+
+## Java Style
+
+- Use constructor injection.
+- Avoid field injection.
+- Use clear names.
+- Keep methods small.
+- Avoid static utility dumping grounds.
+- Use BigDecimal for money.
+- Use LocalDate/LocalDateTime for dates.
+- Do not use double/float for currency.
+
+## API Rules
+
+- Validate request DTOs.
+- Return consistent error responses.
+- Do not expose stack traces.
+- Do not expose internal entity fields accidentally.
+- Do not trust client-provided userId for ownership.
+
+## Transaction Rules
+
+Use @Transactional for multi-step writes or business operations that must be atomic.
+
+## Testing
+
+Add tests for:
+
+- fee cycle calculation
+- money calculation
+- user isolation
+- unauthorized access
+- date boundaries
+- invalid inputs

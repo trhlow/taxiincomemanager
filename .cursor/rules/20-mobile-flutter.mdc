@@ -1,0 +1,43 @@
+---
+description: Flutter mobile rules
+globs:
+  - "mobile/**/*.dart"
+  - "**/lib/**/*.dart"
+  - "**/test/**/*.dart"
+  - "**/pubspec.yaml"
+alwaysApply: false
+---
+
+# Flutter Mobile Rules
+
+## Structure
+
+Prefer separation:
+
+- screens/pages: UI screens
+- widgets: reusable UI
+- models: typed data
+- services/api: HTTP calls
+- state/controllers/providers: state management
+- utils: pure helper logic only
+
+## UI Rules
+
+- Support small Android screens.
+- Avoid overflow.
+- Use date pickers for dates.
+- Show loading, empty, error, and success states.
+- Disable buttons while submitting.
+- Validate forms before API calls.
+
+## API Rules
+
+- Do not call APIs directly inside large build methods.
+- Use typed request/response models.
+- Handle network errors clearly.
+- Base URL must be configurable by environment.
+- Do not store tokens insecurely if secure storage exists.
+
+## Testing
+
+Add unit tests for pure calculations and state logic when possible.

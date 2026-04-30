@@ -1,0 +1,60 @@
+---
+description: Security and privacy rules
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Security Rules
+
+This project handles private personal and financial data. Treat security as mandatory.
+
+## Authentication
+
+- Private endpoints must require authentication or the project's current identity gate.
+- Token issuing endpoints must require valid credentials or strong ownership proof.
+- Do not add public endpoints that expose user data.
+- Never allow access by guessing userId.
+- Current user must come from authenticated or project-gated context.
+- Existing MVP headers such as X-Api-Key and X-User-Id are not equivalent to full production auth.
+
+## Authorization
+
+- Every user-owned resource must be checked against the current authenticated/gated user.
+- Admin-like behavior must be explicit and protected.
+- Do not rely on frontend-only checks.
+
+## Secrets
+
+Never commit:
+
+- API keys
+- JWT secrets
+- passwords
+- database credentials
+- private tokens
+- OAuth secrets
+
+Use environment variables or config templates.
+
+## Logging
+
+Do not log:
+
+- passwords
+- API keys
+- access tokens
+- refresh tokens
+- OTPs
+- private financial records
+- uploaded file contents
+
+## File Upload
+
+For PDF/import features:
+
+- validate file size
+- validate MIME/type assumptions
+- reject unsupported files
+- handle malformed files safely
+- do not trust extracted text blindly

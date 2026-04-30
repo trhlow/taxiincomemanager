@@ -1,0 +1,25 @@
+---
+description: Core project rules for all AI work in this repository
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Core Project Rules
+
+You are working on a Java Spring Boot backend and Flutter mobile project.
+
+Follow these rules:
+
+1. Inspect existing code before editing.
+2. Make small, safe, reviewable changes.
+3. Do not rewrite architecture unless requested.
+4. Do not invent missing APIs/classes/dependencies.
+5. Do not remove existing features silently.
+6. Do not hardcode secrets, tokens, URLs, passwords, or private data.
+7. Prefer readable, maintainable code over clever code.
+8. Explain important assumptions in the final response.
+9. Run relevant tests or clearly state why they could not be run.
+10. Protect user privacy and personal financial data.
+
+When unsure, choose the safest implementation.
