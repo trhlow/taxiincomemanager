@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import '../../core/providers.dart';
+import '../dashboard/dashboard_repository.dart';
 import 'schedule_models.dart';
 
 String _iso(DateTime d) =>
@@ -11,8 +12,8 @@ class ScheduleRepository {
   ScheduleRepository(this._api);
 
   Future<WeekSchedule> week(DateTime weekStart) async {
-    final res = await _api.getJson('/api/schedules/week',
-        query: {'weekStart': _iso(weekStart)});
+    final res = await _api
+        .getJson('/api/schedules/week', query: {'weekStart': _iso(weekStart)});
     return WeekSchedule.fromJson(res);
   }
 
@@ -48,7 +49,7 @@ DateTime mondayOf(DateTime d) {
 }
 
 final selectedWeekStartProvider = StateProvider<DateTime>((ref) {
-  return mondayOf(DateTime.now());
+  return mondayOf(ref.watch(businessTodayProvider));
 });
 
 final weekScheduleProvider =

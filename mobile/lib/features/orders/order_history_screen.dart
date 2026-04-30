@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../widgets/source_badge.dart';
+import '../dashboard/dashboard_repository.dart';
 import 'order_models.dart';
 import 'order_repository.dart';
 
@@ -14,7 +15,7 @@ class OrderHistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(selectedHistoryDateProvider);
     final ordersAsync = ref.watch(dailyOrdersProvider(selected));
-    final today = DateTime.now();
+    final today = ref.watch(businessTodayProvider);
     final yesterday = today.subtract(const Duration(days: 1));
 
     return Scaffold(
@@ -67,7 +68,8 @@ class OrderHistoryScreen extends ConsumerWidget {
                       onTap: () => ref
                               .read(selectedHistoryDateProvider.notifier)
                               .state =
-                          DateTime(yesterday.year, yesterday.month, yesterday.day),
+                          DateTime(
+                              yesterday.year, yesterday.month, yesterday.day),
                     ),
                     const SizedBox(width: 6),
                     _FilterChipBtn(
@@ -83,10 +85,8 @@ class OrderHistoryScreen extends ConsumerWidget {
                           lastDate: DateTime(today.year + 1, 12, 31),
                         );
                         if (picked != null) {
-                          ref
-                              .read(selectedHistoryDateProvider.notifier)
-                              .state = DateTime(
-                              picked.year, picked.month, picked.day);
+                          ref.read(selectedHistoryDateProvider.notifier).state =
+                              DateTime(picked.year, picked.month, picked.day);
                         }
                       },
                     ),
@@ -117,8 +117,7 @@ class OrderHistoryScreen extends ConsumerWidget {
             Expanded(
               child: ordersAsync.when(
                 data: (data) => _buildList(context, ref, data),
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => _ErrorView(
                   message: e.toString(),
                   onRetry: () => ref.invalidate(dailyOrdersProvider),
@@ -507,7 +506,8 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton.tonal(onPressed: onRetry, child: const Text('Thử lại')),
+            FilledButton.tonal(
+                onPressed: onRetry, child: const Text('Thử lại')),
           ],
         ),
       ),

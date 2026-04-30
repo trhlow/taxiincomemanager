@@ -7,6 +7,7 @@ import '../../core/network_feedback.dart';
 import '../../core/theme.dart';
 import '../../widgets/info_banner.dart';
 import '../../widgets/source_badge.dart';
+import '../dashboard/dashboard_repository.dart';
 import 'schedule_models.dart';
 import 'schedule_repository.dart';
 
@@ -27,7 +28,8 @@ class ScheduleScreen extends ConsumerWidget {
           children: [
             ScreenHeader(
               title: 'Lịch tuần',
-              subtitle: 'Tuần ${formatDate(weekStart)} - ${formatDate(weekEnd)}',
+              subtitle:
+                  'Tuần ${formatDate(weekStart)} - ${formatDate(weekEnd)}',
               actions: [
                 Container(
                   decoration: BoxDecoration(
@@ -295,9 +297,11 @@ class _DayRow extends ConsumerWidget {
   final DateTime day;
   final String dowLabel;
   final WeekSchedule week;
-  const _DayRow({required this.day, required this.dowLabel, required this.week});
+  const _DayRow(
+      {required this.day, required this.dowLabel, required this.week});
 
-  Future<void> _toggle(BuildContext context, WidgetRef ref, String shift) async {
+  Future<void> _toggle(
+      BuildContext context, WidgetRef ref, String shift) async {
     final repo = ref.read(scheduleRepositoryProvider);
     final has = week.has(day, shift);
     try {
@@ -317,7 +321,7 @@ class _DayRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final today = DateTime.now();
+    final today = ref.watch(businessTodayProvider);
     final isToday = day.year == today.year &&
         day.month == today.month &&
         day.day == today.day;
@@ -349,9 +353,8 @@ class _DayRow extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: isToday
-                          ? AppColors.primary
-                          : AppColors.textPrimary,
+                      color:
+                          isToday ? AppColors.primary : AppColors.textPrimary,
                     ),
                   ),
                   Text(

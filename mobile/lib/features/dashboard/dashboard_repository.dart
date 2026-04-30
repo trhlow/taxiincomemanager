@@ -21,3 +21,9 @@ final dashboardSummaryProvider = FutureProvider<DashboardSummary>((ref) async {
   final repo = ref.watch(dashboardRepositoryProvider);
   return repo.summary();
 });
+
+final businessTodayProvider = Provider<DateTime>((ref) {
+  final serverToday = ref.watch(dashboardSummaryProvider).valueOrNull?.today;
+  final today = serverToday ?? DateTime.now();
+  return DateTime(today.year, today.month, today.day);
+});

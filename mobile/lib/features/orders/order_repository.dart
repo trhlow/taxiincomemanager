@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import '../../core/providers.dart';
+import '../dashboard/dashboard_repository.dart';
 import 'order_models.dart';
 
 class OrderRepository {
@@ -41,6 +42,5 @@ final dailyOrdersProvider =
 });
 
 final selectedHistoryDateProvider = StateProvider<DateTime>((ref) {
-  final now = DateTime.now();
-  return DateTime(now.year, now.month, now.day);
+  return ref.watch(businessTodayProvider);
 });
