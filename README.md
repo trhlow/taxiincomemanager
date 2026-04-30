@@ -50,7 +50,7 @@ Copy-Item .env.example .env
 docker compose up -d
 ```
 
-Database listen trên `localhost:5433` (host) → container port 5432. Tên DB, user, password và API key lấy từ `.env`. (Dùng 5433 thay vì 5432 để tránh đụng với Postgres khác có thể đã cài sẵn trên máy.)
+Database listen trên `localhost:5433` (host) → container port 5432. Tên DB, user, password, API key và setup secret lấy từ `.env`. (Dùng 5433 thay vì 5432 để tránh đụng với Postgres khác có thể đã cài sẵn trên máy.)
 
 `docker-compose.yml` **healthcheck** dùng `$$POSTGRES_USER` / `$$POSTGRES_DB` trong container để luôn khớp các biến `POSTGRES_*` (tránh báo unhealthy dù Postgres chạy vì lệnh `pg_isready` sai user/db).
 
@@ -84,9 +84,10 @@ Smoke test nhanh bằng curl:
 
 ```powershell
 $API_KEY = "dev-local-api-key"
+$SETUP_SECRET = "dev-local-setup-secret"
 
 # Tạo user lần đầu (response có `accessToken` — chỉ hiển thị một lần)
-$response = curl -s -X POST http://localhost:8081/api/users/init -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -d "{\"displayName\":\"Long\"}"
+$response = curl -s -X POST http://localhost:8081/api/users/init -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -d "{\"displayName\":\"Long\",\"setupSecret\":\"$SETUP_SECRET\"}"
 # Gán token (PowerShell ví dụ: $TOKEN = ($response | ConvertFrom-Json).accessToken )
 $TOKEN = "<paste-accessToken-here>"
 
@@ -116,14 +117,14 @@ Cấu hình base URL backend (có thể chỉnh ở màn hình onboarding):
 - Android emulator: `http://10.0.2.2:8081`
 - iOS simulator / desktop: `http://localhost:8081`
 
-App sẽ hỏi nhập tên ở lần mở đầu tiên, sau đó gọi `POST /api/users/init` và lưu **`accessToken`** (opaque) cùng `userId` trong `SharedPreferences`. Mọi request sau init gửi `Authorization: Bearer <accessToken>` và header `X-Api-Key`.
+App sẽ hỏi nhập tên và setup secret ở lần mở đầu tiên, sau đó gọi `POST /api/users/init` và lưu **`accessToken`** (opaque) cùng `userId`. Token được lưu bằng secure storage. Mọi request sau init gửi `Authorization: Bearer <accessToken>` và header `X-Api-Key`.
 
 ## API tóm tắt
 
 
 | Method | Endpoint                                               | Mô tả                                            |
 | ------ | ------------------------------------------------------ | ------------------------------------------------ |
-| POST   | `/api/users/init`                                      | Tạo user lần đầu (idempotent)                    |
+| POST   | `/api/users/init`                                      | Tạo user lần đầu bằng setup secret               |
 | GET    | `/api/users/me`                                        | Lấy thông tin user hiện tại                      |
 | POST   | `/api/orders`                                          | Nhập đơn mới (auto-tính cước/thực nhận)          |
 | GET    | `/api/orders/by-date?date=YYYY-MM-DD`                  | Đơn theo ngày                                    |
@@ -136,7 +137,7 @@ App sẽ hỏi nhập tên ở lần mở đầu tiên, sau đó gọi `POST /ap
 | GET    | `/api/schedules/week/check?weekStart=YYYY-MM-DD`       | Kiểm tra đủ 1 sáng + 2 tối                       |
 
 
-Mọi request cần header `X-Api-Key`. Mọi request sau khi init user cần thêm `Authorization: Bearer <accessToken>` (lấy từ response init; không dùng `X-User-Id` làm credential).
+Mọi request cần header `X-Api-Key`. Riêng `POST /api/users/init` còn cần `setupSecret` và chỉ dùng được khi DB chưa có user; nếu đã khởi tạo sẽ trả `409 USER_ALREADY_INITIALIZED`. Mọi request sau khi init user cần thêm `Authorization: Bearer <accessToken>` (lấy từ response init; không dùng `X-User-Id` làm credential).
 
 ## Stop services
 
@@ -145,4 +146,3 @@ docker compose down
 # hoặc xoá luôn data:
 docker compose down -v
 ```
-

@@ -9,10 +9,12 @@ This model is acceptable for private deployment but is not designed for public m
 ## Current Protections
 
 - API key gate for backend access
+- One-time setup secret for initial user creation
 - Bearer access token stored as a hash in the database
 - Token stored in Flutter secure storage
 - Server-side user resolution from token
 - No client-provided user id is trusted
+- Database constraint for a single primary user
 
 ## Known Limitations
 
