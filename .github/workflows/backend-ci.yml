@@ -26,3 +26,29 @@ jobs:
       - name: Integration tests (Testcontainers requires Docker socket)
         working-directory: backend
         run: mvn -B -q verify -Pintegration
+
+      - name: Fail if integration tests were skipped
+        working-directory: backend
+        run: |
+          python - <<'PY'
+          import pathlib
+          import sys
+          import xml.etree.ElementTree as ET
+
+          summary_path = pathlib.Path("target/failsafe-reports/failsafe-summary.xml")
+          if not summary_path.exists():
+              print(f"Missing {summary_path}; integration tests may not have run.")
+              sys.exit(1)
+
+          root = ET.parse(summary_path).getroot()
+          completed = int(root.findtext("completed", default="0"))
+          skipped = int(root.findtext("skipped", default="0"))
+          if completed <= 0:
+              print("No integration tests completed. Check Failsafe/Testcontainers configuration.")
+              sys.exit(1)
+          if skipped > 0:
+              print(f"Integration tests skipped: {skipped}. Docker/Testcontainers must run in CI.")
+              sys.exit(1)
+
+          print("Integration tests were not skipped.")
+          PY
