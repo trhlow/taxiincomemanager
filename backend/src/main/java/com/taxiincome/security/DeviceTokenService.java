@@ -15,6 +15,7 @@ public class DeviceTokenService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int TOUCH_MIN_INTERVAL_MINUTES = 5;
+    private static final int TOKEN_TTL_DAYS = 90;
 
     private final DeviceTokenRepository deviceTokenRepository;
     private final Clock clock;
@@ -39,6 +40,9 @@ public class DeviceTokenService {
         }
         DeviceToken token = opt.get();
         OffsetDateTime now = offsetNow();
+        if (token.getRevokedAt() != null || !token.getExpiresAt().isAfter(now)) {
+            return Optional.empty();
+        }
         OffsetDateTime last = token.getLastUsedAt();
         if (last == null || last.isBefore(now.minusMinutes(TOUCH_MIN_INTERVAL_MINUTES))) {
             token.setLastUsedAt(now);
@@ -61,8 +65,23 @@ public class DeviceTokenService {
         row.setId(UUID.randomUUID());
         row.setUserId(userId);
         row.setTokenHash(hash);
-        row.setCreatedAt(offsetNow());
+        OffsetDateTime now = offsetNow();
+        row.setCreatedAt(now);
+        row.setExpiresAt(now.plusDays(TOKEN_TTL_DAYS));
         deviceTokenRepository.save(row);
         return raw;
+    }
+
+    /**
+     * Revokes the current bearer token. Missing tokens are treated as already logged out.
+     */
+    @Transactional
+    public void revokeTokenHash(String tokenHash) {
+        deviceTokenRepository.findByTokenHash(tokenHash).ifPresent(token -> {
+            if (token.getRevokedAt() == null) {
+                token.setRevokedAt(offsetNow());
+                deviceTokenRepository.save(token);
+            }
+        });
     }
 }

@@ -127,6 +127,7 @@ class SecurityFilterIT {
 
         assertThat(deviceTokenRepository.findByTokenHash(tokenHash)).isPresent();
         assertThat(deviceTokenRepository.findByTokenHash(tokenHash).get().getLastUsedAt()).isNull();
+        assertThat(deviceTokenRepository.findByTokenHash(tokenHash).get().getExpiresAt()).isNotNull();
 
         mockMvc.perform(get("/api/dashboard")
                         .header("X-Api-Key", API_KEY)
@@ -135,5 +136,19 @@ class SecurityFilterIT {
                 .andExpect(jsonPath("$.todayTotalNet").exists());
 
         assertThat(deviceTokenRepository.findByTokenHash(tokenHash).get().getLastUsedAt()).isNotNull();
+
+        mockMvc.perform(post("/api/auth/logout")
+                        .header("X-Api-Key", API_KEY)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("OK"));
+
+        assertThat(deviceTokenRepository.findByTokenHash(tokenHash).get().getRevokedAt()).isNotNull();
+
+        mockMvc.perform(get("/api/dashboard")
+                        .header("X-Api-Key", API_KEY)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_ACCESS_TOKEN"));
     }
 }

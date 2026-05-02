@@ -27,6 +27,12 @@ public class DeviceToken {
     @Column(name = "last_used_at")
     private OffsetDateTime lastUsedAt;
 
+    @Column(name = "expires_at", nullable = false)
+    private OffsetDateTime expiresAt;
+
+    @Column(name = "revoked_at")
+    private OffsetDateTime revokedAt;
+
     public UUID getId() {
         return id;
     }
@@ -65,5 +71,21 @@ public class DeviceToken {
 
     public void setLastUsedAt(OffsetDateTime lastUsedAt) {
         this.lastUsedAt = lastUsedAt;
+    }
+
+    public OffsetDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(OffsetDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public OffsetDateTime getRevokedAt() {
+        return revokedAt;
+    }
+
+    public void setRevokedAt(OffsetDateTime revokedAt) {
+        this.revokedAt = revokedAt;
     }
 }
