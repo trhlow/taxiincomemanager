@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../dashboard/dashboard_repository.dart';
 import '../../widgets/info_banner.dart';
 import '../../widgets/source_badge.dart';
+
 class PersonalScreen extends ConsumerStatefulWidget {
   const PersonalScreen({super.key});
 
@@ -105,8 +106,7 @@ class _PersonalScreenState extends ConsumerState<PersonalScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: const Text('Khởi tạo lại dữ liệu?'),
         content: const Text(
           'Hành động này sẽ xoá thông tin user khỏi máy này (không xoá dữ liệu trên server) và quay lại màn hình thiết lập.',
@@ -126,7 +126,15 @@ class _PersonalScreenState extends ConsumerState<PersonalScreen> {
     );
     if (ok == true) {
       final storage = ref.read(localStorageProvider);
+      if (storage.accessToken != null && storage.accessToken!.isNotEmpty) {
+        try {
+          await ref.read(apiClientProvider).postJson('/api/auth/logout');
+        } catch (_) {
+          // Local reset must still work when the token is already invalid or offline.
+        }
+      }
       await storage.clear();
+      ref.invalidate(apiClientProvider);
       ref.read(currentUserProvider.notifier).state = null;
     }
   }
@@ -389,8 +397,8 @@ class _ProfileCard extends StatelessWidget {
                 colors: [Color(0xFF60A5FA), AppColors.primary],
               ),
             ),
-            child: const Icon(Icons.person_rounded,
-                color: Colors.white, size: 32),
+            child:
+                const Icon(Icons.person_rounded, color: Colors.white, size: 32),
           ),
           const SizedBox(width: 14),
           Expanded(
