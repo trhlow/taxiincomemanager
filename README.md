@@ -56,7 +56,7 @@ Database listen trên `localhost:5433` (host) → container port 5432. Tên DB, 
 
 ### Kiểm thử backend trong CI và local
 
-- **GitHub Actions:** workflow [`.github/workflows/backend-ci.yml`](.github/workflows/backend-ci.yml) chạy `mvn test` (unit) và `mvn verify -Pintegration` (integration Testcontainers trên Ubuntu — có Docker sẵn).
+- **GitHub Actions:** workflow [`.github/workflows/backend-ci.yml`](.github/workflows/backend-ci.yml) chạy `mvn test` (unit) và `mvn verify -Pintegration` (integration Testcontainers trên Ubuntu — có Docker sẵn). CI sẽ fail nếu integration tests bị skip.
 - **Local — chỉ unit test:**
 
 ```powershell
@@ -117,13 +117,36 @@ Cấu hình base URL backend (có thể chỉnh ở màn hình onboarding):
 - Android emulator: `http://10.0.2.2:8081`
 - iOS simulator / desktop: `http://localhost:8081`
 
-App sẽ hỏi nhập tên và setup secret ở lần mở đầu tiên, sau đó gọi `POST /api/users/init` và lưu **`accessToken`** (opaque) cùng `userId`. Token được lưu bằng secure storage. Mọi request sau init gửi `Authorization: Bearer <accessToken>` và header `X-Api-Key`.
+App sẽ hỏi nhập tên và setup secret ở lần mở đầu tiên, sau đó gọi `POST /api/users/init` và lưu **`accessToken`** (opaque) cùng `userId`. Token được lưu bằng secure storage, hết hạn sau 90 ngày, và được thu hồi khi reset/logout khỏi thiết bị. Mọi request sau init gửi `Authorization: Bearer <accessToken>` và header `X-Api-Key`.
+
+Debug Android builds allow cleartext only for `localhost`, `127.0.0.1`, and emulator host `10.0.2.2`. Release builds do not allow cleartext traffic; use HTTPS for a real device/release deployment.
+
+### Android release signing
+
+Release builds are not signed with the debug key. Provide either `mobile/android/key.properties` (not committed) or environment variables:
+
+```properties
+storeFile=/absolute/path/to/release-keystore.jks
+storePassword=...
+keyAlias=...
+keyPassword=...
+```
+
+```powershell
+$env:ANDROID_KEYSTORE_PATH="C:\path\release-keystore.jks"
+$env:ANDROID_KEYSTORE_PASSWORD="..."
+$env:ANDROID_KEY_ALIAS="..."
+$env:ANDROID_KEY_PASSWORD="..."
+```
+
+Keystore files and `key.properties` are ignored by git. Release build tasks fail when no release signing config is available.
 
 ## API tóm tắt
 
 
 | Method | Endpoint                                               | Mô tả                                            |
 | ------ | ------------------------------------------------------ | ------------------------------------------------ |
+| POST   | `/api/auth/logout`                                     | Thu hồi access token hiện tại                    |
 | POST   | `/api/users/init`                                      | Tạo user lần đầu bằng setup secret               |
 | GET    | `/api/users/me`                                        | Lấy thông tin user hiện tại                      |
 | POST   | `/api/orders`                                          | Nhập đơn mới (auto-tính cước/thực nhận)          |
