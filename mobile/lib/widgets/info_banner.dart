@@ -26,23 +26,31 @@ class InfoBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textPrimary,
-                height: 1.35,
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                    height: 1.35,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
           if (trailing != null) ...[
-            const SizedBox(width: 8),
-            trailing!,
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: trailing!,
+            ),
           ],
         ],
       ),
