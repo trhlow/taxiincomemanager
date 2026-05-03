@@ -28,7 +28,8 @@ Common local pitfalls:
 
 - Wrong DB port/credentials
 - Missing `X-Api-Key` / wrong key
-- Missing/invalid `X-User-Id`
+- Missing/invalid `Authorization: Bearer <accessToken>`
+- Calling `/api/users/init` after the app has already been initialized
 
 ## Mobile (Flutter)
 

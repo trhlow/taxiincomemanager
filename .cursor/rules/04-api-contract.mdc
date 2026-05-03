@@ -19,9 +19,10 @@ This repo uses:
 Backend expects (for `/api/**`):
 
 - `X-Api-Key`: shared API key (dev/prod configured via env)
-- `X-User-Id`: UUID string for the current user (after onboarding)
+- `Authorization: Bearer <accessToken>`: opaque device token issued by `/api/users/init`
 
-Mobile must send both consistently (see `mobile/lib/core/api_client.dart`).
+Mobile must send both consistently after onboarding (see `mobile/lib/core/api_client.dart`).
+Do not reintroduce `X-User-Id` as a trusted credential.
 
 ## Error shape (current)
 

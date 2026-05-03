@@ -31,7 +31,8 @@ This repo uses a root `.env` (ignored) + `.env.example` (committed) for local de
 This MVP uses:
 
 - `X-Api-Key` as a coarse gate
-- `X-User-Id` as a personal identity header
+- `Authorization: Bearer <accessToken>` as a device token
+- Server-side user resolution from the token hash
 
 Treat this as **not equivalent** to full user authentication/authorization.
 
@@ -50,7 +51,7 @@ If requirements move toward public deployment, plan for JWT/session + proper use
 ## Mobile security
 
 - Avoid storing long-lived secrets in `SharedPreferences`.
-- Prefer secure storage for tokens if/when true auth is introduced.
+- Store bearer access tokens in secure storage.
 - Clear sensitive local state on “reset/logout” flows.
 
 ## Error responses

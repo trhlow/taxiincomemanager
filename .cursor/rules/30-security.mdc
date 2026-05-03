@@ -16,7 +16,8 @@ This project handles private personal and financial data. Treat security as mand
 - Do not add public endpoints that expose user data.
 - Never allow access by guessing userId.
 - Current user must come from authenticated or project-gated context.
-- Existing MVP headers such as X-Api-Key and X-User-Id are not equivalent to full production auth.
+- The current gate is `X-Api-Key` plus `Authorization: Bearer <accessToken>`.
+- Never trust client-provided user ids as credentials.
 
 ## Authorization
 

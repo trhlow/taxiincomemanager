@@ -17,7 +17,7 @@ If you add a `docs/` folder later, keep it short and actionable.
 When you change runtime behavior, update docs/examples for:
 
 - Ports (Postgres, backend, Flutter web)
-- Required headers (`X-Api-Key`, `X-User-Id`)
+- Required headers (`X-Api-Key`, `Authorization: Bearer <accessToken>`)
 - Setup steps (`docker compose`, `mvn`, `flutter run`)
 - Any breaking API contract changes
 
