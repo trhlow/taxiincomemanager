@@ -2,8 +2,15 @@ package com.taxiincome.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.taxiincome.order.Order;
+import com.taxiincome.order.OrderRepository;
+import com.taxiincome.order.OrderSourceType;
 import com.taxiincome.security.AccessTokenHasher;
+import com.taxiincome.security.DeviceTokenService;
 import com.taxiincome.security.DeviceTokenRepository;
+import com.taxiincome.user.User;
+import com.taxiincome.user.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,6 +25,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.nio.charset.StandardCharsets;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,9 +40,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * HTTP-level checks for {@link com.taxiincome.common.ApiKeyFilter} and
  * {@link com.taxiincome.common.BearerTokenFilter}. Runs only with {@code -Pintegration};
- * requires Docker for Testcontainers (skipped when Docker unavailable).
+ * requires Docker for Testcontainers. The integration profile must fail when Docker is unavailable.
  */
-@Testcontainers(disabledWithoutDocker = true)
+@Testcontainers
 @SpringBootTest(properties = "spring.profiles.active=test")
 @AutoConfigureMockMvc
 class SecurityFilterIT {
@@ -56,6 +67,22 @@ class SecurityFilterIT {
 
     @Autowired
     private DeviceTokenRepository deviceTokenRepository;
+
+    @Autowired
+    private DeviceTokenService deviceTokenService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @BeforeEach
+    void cleanDatabase() {
+        deviceTokenRepository.deleteAll();
+        orderRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 
     @Test
     void corsPreflight_allowsCurrentAuthHeadersOnly() throws Exception {
@@ -150,5 +177,62 @@ class SecurityFilterIT {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("INVALID_ACCESS_TOKEN"));
+    }
+
+    @Test
+    void bearerToken_cannotReadAnotherUsersOrders() throws Exception {
+        User alice = saveUser("Alice", "PRIMARY");
+        User bob = saveUser("Bob", "LEGACY_BOB");
+        String aliceToken = deviceTokenService.issueToken(alice.getId());
+        String bobToken = deviceTokenService.issueToken(bob.getId());
+
+        saveOrder(alice.getId(), 100_000L, 70_000L, LocalTime.of(9, 0));
+        saveOrder(bob.getId(), 900_000L, 630_000L, LocalTime.of(10, 0));
+
+        mockMvc.perform(get("/api/orders/by-date")
+                        .header("X-Api-Key", API_KEY)
+                        .header("Authorization", "Bearer " + aliceToken)
+                        .param("date", "2026-05-02"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderCount").value(1))
+                .andExpect(jsonPath("$.totalOrderAmount").value(100_000))
+                .andExpect(jsonPath("$.totalNet").value(70_000))
+                .andExpect(jsonPath("$.orders[0].orderAmount").value(100_000));
+
+        mockMvc.perform(get("/api/orders/by-date")
+                        .header("X-Api-Key", API_KEY)
+                        .header("Authorization", "Bearer " + bobToken)
+                        .param("date", "2026-05-02"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderCount").value(1))
+                .andExpect(jsonPath("$.totalOrderAmount").value(900_000))
+                .andExpect(jsonPath("$.totalNet").value(630_000))
+                .andExpect(jsonPath("$.orders[0].orderAmount").value(900_000));
+    }
+
+    private User saveUser(String displayName, String singletonKey) {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setDisplayName(displayName);
+        user.setNameLocked(true);
+        user.setSingletonKey(singletonKey);
+        return userRepository.saveAndFlush(user);
+    }
+
+    private void saveOrder(UUID userId, long orderAmount, long netAmount, LocalTime time) {
+        Order order = new Order();
+        order.setId(UUID.randomUUID());
+        order.setUserId(userId);
+        order.setOrderAmount(orderAmount);
+        order.setFeeRate(new BigDecimal("0.300"));
+        order.setFeeAmount(orderAmount * 30 / 100);
+        order.setTipAmount(0);
+        order.setTaxiCount((short) 1);
+        order.setSubtotal(netAmount);
+        order.setNetAmount(netAmount);
+        order.setOrderDate(LocalDate.of(2026, 5, 2));
+        order.setOrderTime(time);
+        order.setSourceType(OrderSourceType.MANUAL);
+        orderRepository.saveAndFlush(order);
     }
 }
