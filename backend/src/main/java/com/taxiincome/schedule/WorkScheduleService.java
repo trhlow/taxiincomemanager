@@ -5,6 +5,7 @@ import com.taxiincome.schedule.dto.CreateScheduleRequest;
 import com.taxiincome.schedule.dto.ScheduleResponse;
 import com.taxiincome.schedule.dto.WeekCheckResponse;
 import com.taxiincome.schedule.dto.WeekScheduleResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,7 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -35,17 +37,25 @@ public class WorkScheduleService {
     @Transactional
     public ScheduleResponse upsert(CreateScheduleRequest req) {
         UUID userId = userContext.requireUserId();
-        return repository
-                .findByUserIdAndWorkDateAndShiftType(userId, req.workDate(), req.shiftType())
-                .map(ScheduleResponse::of)
-                .orElseGet(() -> {
-                    WorkSchedule s = new WorkSchedule();
-                    s.setId(UUID.randomUUID());
-                    s.setUserId(userId);
-                    s.setWorkDate(req.workDate());
-                    s.setShiftType(req.shiftType());
-                    return ScheduleResponse.of(repository.save(s));
-                });
+        Optional<WorkSchedule> existing = repository
+                .findByUserIdAndWorkDateAndShiftType(userId, req.workDate(), req.shiftType());
+        if (existing.isPresent()) {
+            return ScheduleResponse.of(existing.get());
+        }
+        WorkSchedule s = new WorkSchedule();
+        s.setId(UUID.randomUUID());
+        s.setUserId(userId);
+        s.setWorkDate(req.workDate());
+        s.setShiftType(req.shiftType());
+        try {
+            return ScheduleResponse.of(repository.saveAndFlush(s));
+        } catch (DataIntegrityViolationException e) {
+            // Concurrent request inserted the same (user, date, shift) first.
+            return repository
+                    .findByUserIdAndWorkDateAndShiftType(userId, req.workDate(), req.shiftType())
+                    .map(ScheduleResponse::of)
+                    .orElseThrow(() -> e);
+        }
     }
 
     @Transactional
