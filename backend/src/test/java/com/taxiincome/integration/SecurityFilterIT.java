@@ -135,6 +135,13 @@ class SecurityFilterIT {
     }
 
     @Test
+    void health_unauthenticated_returnsUp() throws Exception {
+        mockMvc.perform(get("/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
+
+    @Test
     void postInit_returnsAccessToken_thenDashboardOk() throws Exception {
         MvcResult init = mockMvc.perform(post("/api/users/init")
                         .header("X-Api-Key", API_KEY)
@@ -142,7 +149,7 @@ class SecurityFilterIT {
                         .content("""
                                 {"displayName":"Integration","setupSecret":"test-setup-secret"}
                                 """))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.accessToken").isString())
                 .andExpect(jsonPath("$.id").isString())
                 .andReturn();
