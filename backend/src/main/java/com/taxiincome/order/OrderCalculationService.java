@@ -22,6 +22,9 @@ public class OrderCalculationService {
         if (orderAmount < 0) {
             throw ApiException.badRequest("INVALID_AMOUNT", "Tiền đơn không được âm");
         }
+        if (orderAmount == 0) {
+            throw ApiException.badRequest("INVALID_AMOUNT", "Tiền đơn phải lớn hơn 0");
+        }
         if (orderAmount > MAX_ORDER_AMOUNT) {
             throw ApiException.badRequest("INVALID_AMOUNT", "Tiền đơn quá lớn");
         }

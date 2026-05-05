@@ -14,7 +14,7 @@ import java.time.LocalTime;
 
 public record CreateOrderRequest(
         @NotNull(message = "Tiền đơn không được để trống")
-        @Min(value = 0, message = "Tiền đơn không được âm")
+        @Min(value = 1, message = "Tiền đơn phải lớn hơn 0")
         @Max(value = 100_000_000, message = "Tiền đơn quá lớn")
         Long orderAmount,
 

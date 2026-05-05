@@ -55,6 +55,12 @@ class OrderCalculationServiceTest {
     }
 
     @Test
+    void rejectsZeroOrderAmount() {
+        assertThatThrownBy(() -> calc.calculate(0L, 0L, (short) 1, RATE))
+                .hasMessage("Tiền đơn phải lớn hơn 0");
+    }
+
+    @Test
     void rejectsInvalidTaxiCount() {
         assertThatThrownBy(() -> calc.calculate(100_000L, 0L, (short) 3, RATE))
                 .hasMessage("Số tài chỉ được 1 hoặc 2");
