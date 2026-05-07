@@ -30,7 +30,11 @@ public class WorkScheduleController {
 
     @PostMapping
     public ResponseEntity<ScheduleResponse> upsert(@Valid @RequestBody CreateScheduleRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.upsert(req));
+        var result = service.upsert(req);
+        if (result.created()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(result.schedule());
+        }
+        return ResponseEntity.ok(result.schedule());
     }
 
     @DeleteMapping

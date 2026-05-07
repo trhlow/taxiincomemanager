@@ -3,6 +3,7 @@ package com.taxiincome.schedule;
 import com.taxiincome.common.UserContext;
 import com.taxiincome.schedule.dto.CreateScheduleRequest;
 import com.taxiincome.schedule.dto.ScheduleResponse;
+import com.taxiincome.schedule.dto.ScheduleUpsertResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,9 +58,10 @@ class WorkScheduleServiceTest {
         when(repository.findByUserIdAndWorkDateAndShiftType(userId, date, ShiftType.MORNING))
                 .thenReturn(Optional.of(row));
 
-        ScheduleResponse out = service.upsert(new CreateScheduleRequest(date, ShiftType.MORNING));
+        ScheduleUpsertResult out = service.upsert(new CreateScheduleRequest(date, ShiftType.MORNING));
 
-        assertThat(out).isEqualTo(ScheduleResponse.of(row));
+        assertThat(out.created()).isFalse();
+        assertThat(out.schedule()).isEqualTo(ScheduleResponse.of(row));
         verify(repository).findByUserIdAndWorkDateAndShiftType(userId, date, ShiftType.MORNING);
         verify(repository, never()).saveAndFlush(any());
     }
@@ -81,9 +83,10 @@ class WorkScheduleServiceTest {
         when(repository.saveAndFlush(any(WorkSchedule.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate key"));
 
-        ScheduleResponse out = service.upsert(new CreateScheduleRequest(date, ShiftType.EVENING));
+        ScheduleUpsertResult out = service.upsert(new CreateScheduleRequest(date, ShiftType.EVENING));
 
-        assertThat(out).isEqualTo(ScheduleResponse.of(winner));
+        assertThat(out.created()).isFalse();
+        assertThat(out.schedule()).isEqualTo(ScheduleResponse.of(winner));
     }
 
     @Test
@@ -100,5 +103,26 @@ class WorkScheduleServiceTest {
 
         assertThatThrownBy(() -> service.upsert(new CreateScheduleRequest(date, ShiftType.MORNING)))
                 .isSameAs(cause);
+    }
+
+    @Test
+    void upsert_whenNewRow_returnsCreated() {
+        UUID userId = UUID.randomUUID();
+        LocalDate date = LocalDate.of(2026, 5, 13);
+        WorkSchedule saved = new WorkSchedule();
+        saved.setId(UUID.randomUUID());
+        saved.setUserId(userId);
+        saved.setWorkDate(date);
+        saved.setShiftType(ShiftType.MORNING);
+
+        when(userContext.requireUserId()).thenReturn(userId);
+        when(repository.findByUserIdAndWorkDateAndShiftType(userId, date, ShiftType.MORNING))
+                .thenReturn(Optional.empty());
+        when(repository.saveAndFlush(any(WorkSchedule.class))).thenReturn(saved);
+
+        ScheduleUpsertResult out = service.upsert(new CreateScheduleRequest(date, ShiftType.MORNING));
+
+        assertThat(out.created()).isTrue();
+        assertThat(out.schedule()).isEqualTo(ScheduleResponse.of(saved));
     }
 }
