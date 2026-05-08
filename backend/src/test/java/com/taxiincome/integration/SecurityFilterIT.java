@@ -90,14 +90,14 @@ class SecurityFilterIT {
                         .header("Origin", "http://localhost:8080")
                         .header("Access-Control-Request-Method", "GET")
                         .header("Access-Control-Request-Headers",
-                                "Authorization, Content-Type, X-Api-Key"))
+                                "Authorization, Content-Type, X-Api-Key, Idempotency-Key"))
                 .andExpect(status().isOk())
                 .andReturn();
 
         String allowHeaders = result.getResponse().getHeader("Access-Control-Allow-Headers");
         String exposeHeaders = result.getResponse().getHeader("Access-Control-Expose-Headers");
 
-        assertThat(allowHeaders).contains("Authorization", "Content-Type", "X-Api-Key");
+        assertThat(allowHeaders).contains("Authorization", "Content-Type", "X-Api-Key", "Idempotency-Key");
         assertThat(allowHeaders).doesNotContain("X-User-Id");
         assertThat(exposeHeaders).isNull();
     }
@@ -215,6 +215,70 @@ class SecurityFilterIT {
                 .andExpect(jsonPath("$.totalOrderAmount").value(900_000))
                 .andExpect(jsonPath("$.totalNet").value(630_000))
                 .andExpect(jsonPath("$.orders[0].orderAmount").value(900_000));
+    }
+
+    @Test
+    void postOrder_missingIdempotencyKey_returns400() throws Exception {
+        String token = initAccessToken();
+
+        mockMvc.perform(post("/api/orders")
+                        .header("X-Api-Key", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"orderAmount":100000,"tipAmount":0,"taxiCount":1}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("MISSING_IDEMPOTENCY_KEY"));
+    }
+
+    @Test
+    void postOrder_duplicateIdempotencyKey_returnsSameOrder() throws Exception {
+        String token = initAccessToken();
+        String key = "integration-idempotency-retry-key";
+        String body = """
+                {"orderAmount":200000,"tipAmount":0,"taxiCount":1}
+                """;
+
+        MvcResult first = mockMvc.perform(post("/api/orders")
+                        .header("X-Api-Key", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String id1 = objectMapper.readTree(first.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                .path("id").asText();
+
+        MvcResult second = mockMvc.perform(post("/api/orders")
+                        .header("X-Api-Key", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String id2 = objectMapper.readTree(second.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                .path("id").asText();
+
+        assertThat(id1).isEqualTo(id2);
+        assertThat(orderRepository.count()).isEqualTo(1);
+    }
+
+    private String initAccessToken() throws Exception {
+        MvcResult init = mockMvc.perform(post("/api/users/init")
+                        .header("X-Api-Key", API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"displayName":"OrderIt","setupSecret":"test-setup-secret"}
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return objectMapper.readTree(init.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                .path("accessToken").asText();
     }
 
     private User saveUser(String displayName, String singletonKey) {
