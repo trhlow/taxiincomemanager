@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 @Component
 @Order(1)
@@ -37,11 +39,23 @@ public class ApiKeyFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
         String provided = request.getHeader(HEADER);
-        if (apiKey == null || apiKey.isBlank() || !apiKey.equals(provided)) {
+        if (apiKey == null || apiKey.isBlank() || !constantTimeEquals(apiKey, provided)) {
             json.unauthorized(response, "INVALID_API_KEY", "X-Api-Key không hợp lệ");
             return;
         }
 
         chain.doFilter(request, response);
+    }
+
+    /**
+     * Compares API keys in time independent of content when lengths match (via {@link MessageDigest#isEqual}).
+     */
+    private static boolean constantTimeEquals(String expected, String actual) {
+        if (actual == null) {
+            return false;
+        }
+        byte[] a = expected.getBytes(StandardCharsets.UTF_8);
+        byte[] b = actual.getBytes(StandardCharsets.UTF_8);
+        return a.length == b.length && MessageDigest.isEqual(a, b);
     }
 }
