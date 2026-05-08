@@ -92,7 +92,7 @@ $response = curl -s -X POST http://localhost:8081/api/users/init -H "Content-Typ
 $TOKEN = "<paste-accessToken-here>"
 
 # Nhập đơn
-curl -X POST http://localhost:8081/api/orders -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -H "Authorization: Bearer $TOKEN" -d "{\"orderAmount\":444000,\"tipAmount\":0,\"taxiCount\":2}"
+curl -X POST http://localhost:8081/api/orders -H "Content-Type: application/json" -H "X-Api-Key: $API_KEY" -H "Authorization: Bearer $TOKEN" -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440001" -d "{\"orderAmount\":444000,\"tipAmount\":0,\"taxiCount\":2}"
 
 # Xem dashboard
 curl http://localhost:8081/api/dashboard -H "X-Api-Key: $API_KEY" -H "Authorization: Bearer $TOKEN"
@@ -149,7 +149,7 @@ Keystore files and `key.properties` are ignored by git. Release build tasks fail
 | POST   | `/api/auth/logout`                                     | Thu hồi access token hiện tại                    |
 | POST   | `/api/users/init`                                      | Tạo user lần đầu bằng setup secret               |
 | GET    | `/api/users/me`                                        | Lấy thông tin user hiện tại                      |
-| POST   | `/api/orders`                                          | Nhập đơn mới (auto-tính cước/thực nhận)          |
+| POST   | `/api/orders`                                          | Nhập đơn mới; **bắt buộc** header `Idempotency-Key` (cùng giá trị khi retry) |
 | GET    | `/api/orders/by-date?date=YYYY-MM-DD`                  | Đơn theo ngày                                    |
 | GET    | `/api/orders/monthly?year=2026&month=4`                | Đơn theo tháng                                   |
 | GET    | `/api/orders/period/current`                           | Đơn của chu kỳ 10 ngày hiện tại                  |
@@ -160,7 +160,7 @@ Keystore files and `key.properties` are ignored by git. Release build tasks fail
 | GET    | `/api/schedules/week/check?weekStart=YYYY-MM-DD`       | Kiểm tra đủ 1 sáng + 2 tối                       |
 
 
-Mọi request cần header `X-Api-Key`. Riêng `POST /api/users/init` còn cần `setupSecret` và chỉ dùng được khi DB chưa có user; nếu đã khởi tạo sẽ trả `409 USER_ALREADY_INITIALIZED`. Mọi request sau khi init user cần thêm `Authorization: Bearer <accessToken>` (lấy từ response init; không dùng `X-User-Id` làm credential).
+Mọi request cần header `X-Api-Key`. Riêng `POST /api/users/init` còn cần `setupSecret` và chỉ dùng được khi DB chưa có user; nếu đã khởi tạo sẽ trả `409 USER_ALREADY_INITIALIZED`. Với `POST /api/orders`, header `Idempotency-Key` là **bắt buộc** (UUID hoặc chuỗi ổn định cho một thao tác; giữ nguyên khi retry để tránh tạo đơn trùng). Mọi request sau khi init user cần thêm `Authorization: Bearer <accessToken>` (lấy từ response init; không dùng `X-User-Id` làm credential).
 
 ## Stop services
 
