@@ -57,6 +57,10 @@ public class Order {
     @Column(name = "note")
     private String note;
 
+    /** SHA-256 hex of user-scoped idempotency key; required on create; UNIQUE per user. */
+    @Column(name = "idempotency_key_hash", length = 64)
+    private String idempotencyKeyHash;
+
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private OffsetDateTime createdAt;
 
@@ -98,6 +102,9 @@ public class Order {
 
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
+
+    public String getIdempotencyKeyHash() { return idempotencyKeyHash; }
+    public void setIdempotencyKeyHash(String idempotencyKeyHash) { this.idempotencyKeyHash = idempotencyKeyHash; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }

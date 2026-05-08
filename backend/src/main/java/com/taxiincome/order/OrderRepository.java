@@ -6,9 +6,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
+
+    Optional<Order> findByUserIdAndIdempotencyKeyHash(UUID userId, String idempotencyKeyHash);
 
     List<Order> findByUserIdAndOrderDateOrderByOrderTimeAsc(UUID userId, LocalDate orderDate);
 

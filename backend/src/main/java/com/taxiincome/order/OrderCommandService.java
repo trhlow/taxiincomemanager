@@ -4,13 +4,16 @@ import com.taxiincome.common.ApiException;
 import com.taxiincome.common.UserContext;
 import com.taxiincome.order.dto.CreateOrderRequest;
 import com.taxiincome.order.dto.OrderResponse;
+import com.taxiincome.security.AccessTokenHasher;
 import com.taxiincome.user.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -35,10 +38,23 @@ public class OrderCommandService {
     }
 
     @Transactional
-    public OrderResponse create(CreateOrderRequest req) {
+    public OrderResponse create(CreateOrderRequest req, Optional<String> idempotencyKeyHeader) {
         UUID userId = userContext.requireUserId();
         if (!userRepository.existsById(userId)) {
             throw ApiException.notFound("USER_NOT_FOUND", "Không tìm thấy user");
+        }
+
+        String rawKey = idempotencyKeyHeader.map(String::trim).orElse("");
+        if (rawKey.isEmpty()) {
+            throw ApiException.badRequest(
+                    "MISSING_IDEMPOTENCY_KEY",
+                    "Thiếu header Idempotency-Key (bắt buộc). Dùng cùng một giá trị khi retry để tránh tạo đơn trùng.");
+        }
+        String idempotencyHash = AccessTokenHasher.sha256Hex(userId + "::" + rawKey);
+        Optional<Order> existing = orderRepository.findByUserIdAndIdempotencyKeyHash(
+                userId, idempotencyHash);
+        if (existing.isPresent()) {
+            return OrderResponse.of(existing.get());
         }
 
         long orderAmount = req.orderAmount();
@@ -68,8 +84,15 @@ public class OrderCommandService {
         order.setOrderTime(orderTime);
         order.setSourceType(OrderSourceType.MANUAL);
         order.setNote(req.note() == null ? null : req.note().trim());
+        order.setIdempotencyKeyHash(idempotencyHash);
 
-        Order saved = orderRepository.save(order);
-        return OrderResponse.of(saved);
+        try {
+            Order saved = orderRepository.saveAndFlush(order);
+            return OrderResponse.of(saved);
+        } catch (DataIntegrityViolationException e) {
+            return orderRepository.findByUserIdAndIdempotencyKeyHash(userId, idempotencyHash)
+                    .map(OrderResponse::of)
+                    .orElseThrow(() -> e);
+        }
     }
 }
