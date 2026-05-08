@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
+import '../../core/uuid_v4.dart';
 import '../../core/providers.dart';
 import '../dashboard/dashboard_repository.dart';
 import 'order_models.dart';
@@ -14,12 +15,13 @@ class OrderRepository {
     required int taxiCount,
     String? note,
   }) async {
+    final idempotencyKey = randomUuidV4();
     final res = await _api.postJson('/api/orders', body: {
       'orderAmount': orderAmount,
       'tipAmount': tipAmount,
       'taxiCount': taxiCount,
       if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
-    });
+    }, headers: {'Idempotency-Key': idempotencyKey});
     return OrderModel.fromJson(res);
   }
 

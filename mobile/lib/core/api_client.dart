@@ -139,9 +139,14 @@ class ApiClient {
     );
   }
 
-  Future<Map<String, dynamic>> postJson(String path, {Object? body}) {
+  Future<Map<String, dynamic>> postJson(String path,
+      {Object? body, Map<String, String>? headers}) {
     return _wrap(
-      () => _dio.post(path, data: body),
+      () => _dio.post(
+        path,
+        data: body,
+        options: headers == null ? null : Options(headers: headers),
+      ),
       (data) => Map<String, dynamic>.from(data as Map),
     );
   }
