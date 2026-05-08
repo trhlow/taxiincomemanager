@@ -10,6 +10,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.UUID;
 
 @Service
@@ -38,7 +40,7 @@ public class UserService {
         if (displayName.isBlank()) {
             throw ApiException.badRequest("INVALID_DISPLAY_NAME", "Tên không được để trống");
         }
-        if (!setupSecret.equals(req.setupSecret())) {
+        if (!utf8ConstantTimeEquals(setupSecret, req.setupSecret())) {
             throw ApiException.unauthorized("INVALID_SETUP_SECRET", "Setup secret không hợp lệ");
         }
         if (userRepository.existsAnyUser()) {
@@ -71,6 +73,18 @@ public class UserService {
         return ApiException.conflict(
                 "USER_ALREADY_INITIALIZED",
                 "Ứng dụng đã được khởi tạo. Không thể cấp token mới qua endpoint init.");
+    }
+
+    /**
+     * Constant-time comparison for setup secret (mitigates timing leaks vs {@link String#equals}).
+     */
+    private static boolean utf8ConstantTimeEquals(String expected, String actual) {
+        if (actual == null) {
+            return false;
+        }
+        byte[] a = expected.getBytes(StandardCharsets.UTF_8);
+        byte[] b = actual.getBytes(StandardCharsets.UTF_8);
+        return a.length == b.length && MessageDigest.isEqual(a, b);
     }
 
     @Transactional(readOnly = true)
