@@ -149,7 +149,7 @@ Keystore files and `key.properties` are ignored by git. Release build tasks fail
 | POST   | `/api/auth/logout`                                     | Thu hồi access token hiện tại                    |
 | POST   | `/api/users/init`                                      | Tạo user lần đầu bằng setup secret               |
 | GET    | `/api/users/me`                                        | Lấy thông tin user hiện tại                      |
-| POST   | `/api/orders`                                          | Nhập đơn mới; **bắt buộc** header `Idempotency-Key` (cùng giá trị khi retry) |
+| POST   | `/api/orders`                                          | Nhập đơn; **bắt buộc** `Idempotency-Key`; **201** lần đầu, **200** khi replay cùng key |
 | GET    | `/api/orders/by-date?date=YYYY-MM-DD`                  | Đơn theo ngày                                    |
 | GET    | `/api/orders/monthly?year=2026&month=4`                | Đơn theo tháng                                   |
 | GET    | `/api/orders/period/current`                           | Đơn của chu kỳ 10 ngày hiện tại                  |
