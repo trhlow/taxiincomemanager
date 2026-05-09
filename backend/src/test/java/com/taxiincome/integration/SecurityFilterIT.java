@@ -258,13 +258,54 @@ class SecurityFilterIT {
                         .header("Idempotency-Key", key)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andReturn();
 
         String id2 = objectMapper.readTree(second.getResponse().getContentAsString(StandardCharsets.UTF_8))
                 .path("id").asText();
 
         assertThat(id1).isEqualTo(id2);
+        assertThat(orderRepository.count()).isEqualTo(1);
+    }
+
+    /**
+     * Same idempotency key always resolves to the first persisted order; later bodies are ignored (replay semantics).
+     */
+    @Test
+    void postOrder_sameIdempotencyKey_differentBody_returnsFirstOrder() throws Exception {
+        String token = initAccessToken();
+        String key = "same-key-diff-body";
+        String bodyFirst = """
+                {"orderAmount":150000,"tipAmount":0,"taxiCount":1}
+                """;
+        String bodySecond = """
+                {"orderAmount":999999,"tipAmount":0,"taxiCount":1}
+                """;
+
+        MvcResult first = mockMvc.perform(post("/api/orders")
+                        .header("X-Api-Key", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bodyFirst))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        JsonNode firstRoot = objectMapper.readTree(
+                first.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        String id = firstRoot.path("id").asText();
+        long amountFirst = firstRoot.path("orderAmount").asLong();
+
+        mockMvc.perform(post("/api/orders")
+                        .header("X-Api-Key", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bodySecond))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.orderAmount").value(amountFirst));
+
         assertThat(orderRepository.count()).isEqualTo(1);
     }
 
