@@ -38,7 +38,7 @@ public class OrderCommandService {
     }
 
     @Transactional
-    public OrderResponse create(CreateOrderRequest req, Optional<String> idempotencyKeyHeader) {
+    public OrderCreateResult create(CreateOrderRequest req, Optional<String> idempotencyKeyHeader) {
         UUID userId = userContext.requireUserId();
         if (!userRepository.existsById(userId)) {
             throw ApiException.notFound("USER_NOT_FOUND", "Không tìm thấy user");
@@ -54,7 +54,7 @@ public class OrderCommandService {
         Optional<Order> existing = orderRepository.findByUserIdAndIdempotencyKeyHash(
                 userId, idempotencyHash);
         if (existing.isPresent()) {
-            return OrderResponse.of(existing.get());
+            return new OrderCreateResult(false, OrderResponse.of(existing.get()));
         }
 
         long orderAmount = req.orderAmount();
@@ -88,11 +88,12 @@ public class OrderCommandService {
 
         try {
             Order saved = orderRepository.saveAndFlush(order);
-            return OrderResponse.of(saved);
+            return new OrderCreateResult(true, OrderResponse.of(saved));
         } catch (DataIntegrityViolationException e) {
-            return orderRepository.findByUserIdAndIdempotencyKeyHash(userId, idempotencyHash)
+            OrderResponse replay = orderRepository.findByUserIdAndIdempotencyKeyHash(userId, idempotencyHash)
                     .map(OrderResponse::of)
                     .orElseThrow(() -> e);
+            return new OrderCreateResult(false, replay);
         }
     }
 }

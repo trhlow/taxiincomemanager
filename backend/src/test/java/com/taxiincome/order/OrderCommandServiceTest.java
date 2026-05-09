@@ -107,9 +107,10 @@ class OrderCommandServiceTest {
                 500_000L, 0L, (short) 1, new BigDecimal("0.300"),
                 LocalDate.of(2026, 5, 10), LocalTime.of(12, 0), null);
 
-        OrderResponse out = service.create(req, Optional.of(rawKey));
+        OrderCreateResult out = service.create(req, Optional.of(rawKey));
 
-        assertThat(out.id()).isEqualTo(existing.getId());
+        assertThat(out.newlyCreated()).isFalse();
+        assertThat(out.response().id()).isEqualTo(existing.getId());
         verify(orderRepository, never()).saveAndFlush(any());
     }
 
@@ -135,9 +136,10 @@ class OrderCommandServiceTest {
                 100_000L, 0L, (short) 1, new BigDecimal("0.300"),
                 null, null, null);
 
-        OrderResponse out = service.create(req, Optional.of(rawKey));
+        OrderCreateResult out = service.create(req, Optional.of(rawKey));
 
-        assertThat(out.id()).isEqualTo(savedId);
+        assertThat(out.newlyCreated()).isTrue();
+        assertThat(out.response().id()).isEqualTo(savedId);
         ArgumentCaptor<Order> cap = ArgumentCaptor.forClass(Order.class);
         verify(orderRepository).saveAndFlush(cap.capture());
         assertThat(cap.getValue().getIdempotencyKeyHash()).isEqualTo(hash);
