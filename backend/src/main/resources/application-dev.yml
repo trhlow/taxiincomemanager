@@ -25,4 +25,5 @@ logging:
 
 server:
   error:
-    include-message: always
+    # Align with root application.yml (never) — avoids leaking validation/internal detail in JSON on dev/staging.
+    include-message: never
