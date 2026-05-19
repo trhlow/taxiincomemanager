@@ -10,6 +10,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -41,7 +46,7 @@ class WorkScheduleServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new WorkScheduleService(repository, userContext, clock);
+        service = new WorkScheduleService(repository, userContext, clock, new ImmediateTransactionManager());
     }
 
     @Test
@@ -124,5 +129,20 @@ class WorkScheduleServiceTest {
 
         assertThat(out.created()).isTrue();
         assertThat(out.schedule()).isEqualTo(ScheduleResponse.of(saved));
+    }
+
+    private static class ImmediateTransactionManager implements PlatformTransactionManager {
+        @Override
+        public TransactionStatus getTransaction(TransactionDefinition definition) throws TransactionException {
+            return new SimpleTransactionStatus();
+        }
+
+        @Override
+        public void commit(TransactionStatus status) throws TransactionException {
+        }
+
+        @Override
+        public void rollback(TransactionStatus status) throws TransactionException {
+        }
     }
 }

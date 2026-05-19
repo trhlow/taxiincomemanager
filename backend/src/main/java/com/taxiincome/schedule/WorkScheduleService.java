@@ -8,12 +8,15 @@ import com.taxiincome.schedule.dto.WeekCheckResponse;
 import com.taxiincome.schedule.dto.WeekScheduleResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,16 +29,21 @@ public class WorkScheduleService {
     private final WorkScheduleRepository repository;
     private final UserContext userContext;
     private final Clock clock;
+    private final TransactionTemplate writeTransaction;
+    private final TransactionTemplate readTransaction;
 
     public WorkScheduleService(WorkScheduleRepository repository,
                                UserContext userContext,
-                               Clock clock) {
+                               Clock clock,
+                               PlatformTransactionManager transactionManager) {
         this.repository = repository;
         this.userContext = userContext;
         this.clock = clock;
+        this.writeTransaction = new TransactionTemplate(transactionManager);
+        this.readTransaction = new TransactionTemplate(transactionManager);
+        this.readTransaction.setReadOnly(true);
     }
 
-    @Transactional
     public ScheduleUpsertResult upsert(CreateScheduleRequest req) {
         UUID userId = userContext.requireUserId();
         Optional<WorkSchedule> existing = repository
@@ -49,13 +57,15 @@ public class WorkScheduleService {
         s.setWorkDate(req.workDate());
         s.setShiftType(req.shiftType());
         try {
-            return new ScheduleUpsertResult(true, ScheduleResponse.of(repository.saveAndFlush(s)));
+            WorkSchedule saved = Objects.requireNonNull(
+                    writeTransaction.execute(status -> repository.saveAndFlush(s)));
+            return new ScheduleUpsertResult(true, ScheduleResponse.of(saved));
         } catch (DataIntegrityViolationException e) {
-            // Concurrent request inserted the same (user, date, shift) first.
-            return repository
-                    .findByUserIdAndWorkDateAndShiftType(userId, req.workDate(), req.shiftType())
-                    .map(ws -> new ScheduleUpsertResult(false, ScheduleResponse.of(ws)))
-                    .orElseThrow(() -> e);
+            return Objects.requireNonNull(readTransaction.execute(status ->
+                    repository
+                            .findByUserIdAndWorkDateAndShiftType(userId, req.workDate(), req.shiftType())
+                            .map(ws -> new ScheduleUpsertResult(false, ScheduleResponse.of(ws)))
+                            .orElseThrow(() -> e)));
         }
     }
 

@@ -1,7 +1,7 @@
 # Known limitations
 
 - **Single shared API key** for all clients — convenient for a personal tool, inadequate for multi-tenant SaaS without additional controls.
-- **Bearer tokens do not expire** automatically in the current schema; compromise requires manual revocation (future work).
+- **Bearer tokens expire after 90 days and can be revoked by logout**, but there is no short-lived access-token/refresh-token rotation yet.
 - **No OAuth / social login** — identity is anonymous display name plus server-issued opaque token after init.
 - **Integration tests require Docker** (Testcontainers); local builds without Docker may not execute `*IT` classes.
 - **Flutter** targets recent stable SDKs; older devices are best-effort only.

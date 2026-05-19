@@ -14,14 +14,17 @@ class OrderRepository {
     required int tipAmount,
     required int taxiCount,
     String? note,
+    String? idempotencyKey,
   }) async {
-    final idempotencyKey = randomUuidV4();
+    final requestKey = idempotencyKey ?? randomUuidV4();
     final res = await _api.postJson('/api/orders', body: {
       'orderAmount': orderAmount,
       'tipAmount': tipAmount,
       'taxiCount': taxiCount,
       if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
-    }, headers: {'Idempotency-Key': idempotencyKey});
+    }, headers: {
+      'Idempotency-Key': requestKey
+    });
     return OrderModel.fromJson(res);
   }
 

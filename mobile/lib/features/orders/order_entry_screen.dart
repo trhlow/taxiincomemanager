@@ -6,6 +6,7 @@ import '../../core/format.dart';
 import '../../core/network_feedback.dart';
 import '../../core/order_money_calc.dart';
 import '../../core/theme.dart';
+import '../../core/uuid_v4.dart';
 import '../../widgets/info_banner.dart';
 import '../../widgets/money_input.dart';
 import '../../widgets/source_badge.dart';
@@ -31,6 +32,8 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
   int _tip = 0;
   int _taxiCount = 1;
   bool _saving = false;
+  String? _pendingCreateKey;
+  String? _pendingPayloadFingerprint;
 
   @override
   void dispose() {
@@ -64,6 +67,12 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
       );
       return;
     }
+    final payloadFingerprint =
+        '$_amount|$_tip|$_taxiCount|${_noteCtrl.text.trim()}';
+    if (_pendingPayloadFingerprint != payloadFingerprint) {
+      _pendingCreateKey = randomUuidV4();
+      _pendingPayloadFingerprint = payloadFingerprint;
+    }
     setState(() => _saving = true);
     try {
       final repo = ref.read(orderRepositoryProvider);
@@ -72,6 +81,7 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
         tipAmount: _tip,
         taxiCount: _taxiCount,
         note: _noteCtrl.text,
+        idempotencyKey: _pendingCreateKey,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,6 +107,8 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
         _amount = 0;
         _tip = 0;
         _taxiCount = 1;
+        _pendingCreateKey = null;
+        _pendingPayloadFingerprint = null;
       });
       ref.invalidate(dashboardSummaryProvider);
       ref.invalidate(dailyOrdersProvider);

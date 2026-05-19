@@ -28,6 +28,12 @@ import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -268,11 +274,8 @@ class SecurityFilterIT {
         assertThat(orderRepository.count()).isEqualTo(1);
     }
 
-    /**
-     * Same idempotency key always resolves to the first persisted order; later bodies are ignored (replay semantics).
-     */
     @Test
-    void postOrder_sameIdempotencyKey_differentBody_returnsFirstOrder() throws Exception {
+    void postOrder_sameIdempotencyKey_differentBody_rejectsConflict() throws Exception {
         String token = initAccessToken();
         String key = "same-key-diff-body";
         String bodyFirst = """
@@ -291,22 +294,62 @@ class SecurityFilterIT {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        JsonNode firstRoot = objectMapper.readTree(
-                first.getResponse().getContentAsString(StandardCharsets.UTF_8));
-        String id = firstRoot.path("id").asText();
-        long amountFirst = firstRoot.path("orderAmount").asLong();
-
         mockMvc.perform(post("/api/orders")
                         .header("X-Api-Key", API_KEY)
                         .header("Authorization", "Bearer " + token)
                         .header("Idempotency-Key", key)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bodySecond))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.orderAmount").value(amountFirst));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("IDEMPOTENCY_CONFLICT"));
 
         assertThat(orderRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void postOrder_concurrentSameIdempotencyKey_persistsOneOrder() throws Exception {
+        String token = initAccessToken();
+        String key = "concurrent-idempotency-key";
+        String body = """
+                {"orderAmount":300000,"tipAmount":0,"taxiCount":1}
+                """;
+        int callers = 2;
+        CountDownLatch ready = new CountDownLatch(callers);
+        CountDownLatch start = new CountDownLatch(1);
+        var pool = Executors.newFixedThreadPool(callers);
+        try {
+            List<Callable<MvcResult>> tasks = new ArrayList<>();
+            for (int i = 0; i < callers; i++) {
+                tasks.add(() -> {
+                    ready.countDown();
+                    assertThat(start.await(5, TimeUnit.SECONDS)).isTrue();
+                    return mockMvc.perform(post("/api/orders")
+                                    .header("X-Api-Key", API_KEY)
+                                    .header("Authorization", "Bearer " + token)
+                                    .header("Idempotency-Key", key)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(body))
+                            .andExpect(status().is2xxSuccessful())
+                            .andReturn();
+                });
+            }
+            var futures = tasks.stream().map(pool::submit).toList();
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+
+            List<String> ids = new ArrayList<>();
+            for (var future : futures) {
+                MvcResult result = future.get(10, TimeUnit.SECONDS);
+                ids.add(objectMapper.readTree(result.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                        .path("id").asText());
+            }
+
+            assertThat(ids).hasSize(2);
+            assertThat(ids.get(1)).isEqualTo(ids.get(0));
+            assertThat(orderRepository.count()).isEqualTo(1);
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     private String initAccessToken() throws Exception {

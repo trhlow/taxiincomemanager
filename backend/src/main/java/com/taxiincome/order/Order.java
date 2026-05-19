@@ -61,6 +61,10 @@ public class Order {
     @Column(name = "idempotency_key_hash", length = 64)
     private String idempotencyKeyHash;
 
+    /** SHA-256 hex of the canonical create payload for idempotency conflict detection. */
+    @Column(name = "idempotency_payload_hash", length = 64)
+    private String idempotencyPayloadHash;
+
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private OffsetDateTime createdAt;
 
@@ -105,6 +109,9 @@ public class Order {
 
     public String getIdempotencyKeyHash() { return idempotencyKeyHash; }
     public void setIdempotencyKeyHash(String idempotencyKeyHash) { this.idempotencyKeyHash = idempotencyKeyHash; }
+
+    public String getIdempotencyPayloadHash() { return idempotencyPayloadHash; }
+    public void setIdempotencyPayloadHash(String idempotencyPayloadHash) { this.idempotencyPayloadHash = idempotencyPayloadHash; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
